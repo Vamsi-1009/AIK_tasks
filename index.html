@@ -878,6 +878,304 @@ const TASKS=[
      "Upload to asciinema.org: <code>asciinema upload my-debug-session.cast</code>",
      "Share the links in your GitHub repo README",
      "Also create dummy test data using AI tools for your real estate backend"
+   ]},
+
+  // ── PHASE 9 — C DEEP DIVES (from task_log + tasksuptodecember) ────────────
+  {id:41,order:41,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"core",
+   title:"Float representation in 4 bytes — how int↔float conversion works in memory",
+   tags:["c","float","ieee754","binary","memory","casting"],
+   concept:"A <strong>float</strong> is stored as 4 bytes using the <strong>IEEE 754</strong> standard: 1 sign bit, 8 exponent bits, 23 mantissa bits. This is why <code>0.1 + 0.2 ≠ 0.3</code> in floating point. Converting int→float and float→int are not simple casts — the bit representation is completely different, not just a reinterpretation.",
+   howto:[
+     "Store a float in a union with an int to see its raw 4 bytes: <code>union { float f; int i; } u;</code>",
+     "Set <code>u.f = 3.14f;</code> then print <code>u.i</code> in hex — read the bits",
+     "Break it down: bit 31 = sign, bits 30-23 = exponent, bits 22-0 = mantissa",
+     "Try converting: <code>int x = (int)3.7f;</code> — what does truncation look like?",
+     "Run: <code>cat image</code>, <code>cat sum.exe</code>, <code>cat photo.jpg</code> — observe the binary garbage output",
+     "Understand why <code>cat</code> on a binary file produces unreadable output"
+   ]},
+  {id:42,order:42,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"core",
+   title:"Write prime and product functions — debug with lldb and perform a backtrace",
+   tags:["c","lldb","debugging","backtrace","functions","prime"],
+   concept:"A <strong>backtrace</strong> (also called a stack trace) shows the complete chain of function calls that led to the current point of execution. It reads bottom-up: <code>main</code> calls <code>is_prime</code> calls some helper. Each frame shows the function name, arguments, and source line. Essential for debugging crashes and segfaults.",
+   howto:[
+     "Write <code>int is_prime(int n)</code> and <code>int product(int a, int b)</code>",
+     "Call them from main with some test values",
+     "Compile: <code>gcc -g functions.c -o functions</code>",
+     "In lldb: set breakpoint inside <code>is_prime</code>",
+     "When it hits: run <code>bt</code> (backtrace) — see the full call chain",
+     "Try calling a function recursively and watch the backtrace grow with each frame"
+   ]},
+  {id:43,order:43,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"advanced",
+   title:"Write a C program that generates errors and stores stderr to a file",
+   tags:["c","stderr","redirection","errors","file-io"],
+   concept:"In C, <strong>stderr</strong> (file descriptor 2) is separate from <strong>stdout</strong> (fd 1). <code>fprintf(stderr, ...)</code> writes to the error stream. Using <code>2> error.txt</code> in bash captures only stderr. This separation lets programs print logs to stdout and errors to stderr independently — they can be redirected to different places.",
+   howto:[
+     "Write a C program that uses <code>fprintf(stderr, 'Error: %s\\n', msg)</code>",
+     "Deliberately cause an error (divide by zero, null pointer) and handle it with error messages",
+     "Run: <code>./program 2> error.txt</code> — errors go to file, not screen",
+     "Run: <code>./program > output.txt 2> error.txt</code> — fully separated",
+     "Open error.txt and verify the error messages are captured",
+     "Use <code>perror()</code> and <code>strerror(errno)</code> for system error messages"
+   ]},
+  {id:44,order:44,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"core",
+   title:"ls -l output — create files and directories, understand every field in the listing",
+   tags:["c","linux","ls","permissions","metadata","filesystem"],
+   concept:"<code>ls -l</code> shows: <strong>permissions</strong> (rwxrwxrwx), <strong>link count</strong>, <strong>owner</strong>, <strong>group</strong>, <strong>size in bytes</strong>, <strong>modification date</strong>, and <strong>name</strong>. The first character is the type: <code>-</code> for file, <code>d</code> for directory, <code>l</code> for symlink. Every field is metadata stored in the inode.",
+   howto:[
+     "Create a file and a directory inside a directory: <code>mkdir mydir; touch mydir/file.txt; mkdir mydir/subdir</code>",
+     "Run <code>ls -l mydir</code> and map every column to its meaning",
+     "Identify: permissions, link count, owner, group, size, date, name",
+     "Use <code>chmod 755 file.txt</code> — run <code>ls -l</code> again and observe change",
+     "Understand the permission bits: r=4, w=2, x=1, so 7=rwx, 5=r-x, 4=r--",
+     "Research: what Linux commands like chmod actually change in the inode's metadata"
+   ]},
+  {id:45,order:45,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"advanced",
+   title:"Darshan-style code: find numbers in array, understand the algorithm approach",
+   tags:["c","algorithms","array","search","code-style"],
+   concept:"'Darshan style' refers to writing code that is maximally readable and minimal — no clever tricks, no unnecessary abstractions. For array search: a plain for loop with a clear condition is better than a binary search unless you've proven you need it. The goal is code any developer can read and verify in 10 seconds.",
+   howto:[
+     "Write a function: <code>int find_in_array(int arr[], int size, int target)</code>",
+     "Return the index if found, -1 if not found",
+     "Write it first as a simple for loop — no tricks",
+     "Test with: found in middle, found at edges, not found at all",
+     "Now write a second version using a different approach — compare readability",
+     "Ask: which version would you prefer to maintain at 2am during an outage?"
+   ]},
+  {id:46,order:46,phase:"Phase 9 — C Deep Dives",phaseIdx:9,cat:"c",prio:"advanced",
+   title:"Call stack: write down all functions below main — understand execution model for C, Python, Java",
+   tags:["c","callstack","execution-model","java","python","lldb"],
+   concept:"In C, the <strong>call stack</strong> grows with each function call. Below <code>main()</code> lie the C runtime startup functions: <code>_start</code> → <code>__libc_start_main</code> → <code>main</code>. These set up the environment before your code runs. In Python it's the interpreter loop; in Java it's the JVM thread. The execution model differs fundamentally across languages.",
+   howto:[
+     "Write a C program with main calling func_a calling func_b",
+     "In lldb: break inside func_b, run <code>bt</code> (backtrace)",
+     "Write down ALL frames — including the ones below main you didn't write",
+     "Research: what is <code>_start</code>? Who calls <code>main</code>?",
+     "Create slides using Gamma explaining the execution model for C, Python, and Java",
+     "Key question: in each language, where does execution begin and what happens before your code runs?"
+   ]},
+
+  // ── PHASE 10 — LINUX SYSTEM INTERNALS ─────────────────────────────────────
+  {id:47,order:47,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"systems",prio:"core",
+   title:"Memory after program ends or crashes — RAM vs persistent storage explained",
+   tags:["systems","memory","ram","hdd","ssd","volatile"],
+   concept:"<strong>RAM is volatile</strong> — when a program ends or the power cuts, everything in RAM is gone instantly. Hard disks and SSDs use different physical mechanisms (magnetic fields, flash cells) that retain their state without power. This is why you save files to disk — RAM is working memory, disk is permanent storage.",
+   howto:[
+     "Write a C program that writes data to a local variable, then exits",
+     "Verify the variable is gone after exit — it can't be read from another process",
+     "Contrast: write the same data to a file — it persists after exit",
+     "Research: what physical mechanism does a HDD use to store bits?",
+     "Research: what physical mechanism does an SSD (NAND flash) use?",
+     "Understand: what is a file system's role in this persistent storage?"
+   ]},
+  {id:48,order:48,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"systems",prio:"core",
+   title:"Why files are stored in blocks — not byte by byte",
+   tags:["systems","filesystem","blocks","performance","allocation"],
+   concept:"Reading a single byte from disk requires spinning up a HDD platter or finding the right NAND cell — a full seek operation. Doing this per byte would be impossibly slow. Instead, the OS reads entire <strong>blocks</strong> (~4KB) at once. Even if your file is 1 byte, a full block is allocated and read. This is the fundamental trade-off between space efficiency and I/O performance.",
+   howto:[
+     "Create a file with 1 byte: <code>echo -n 'A' > tiny.txt</code>",
+     "Check its disk usage: <code>du -sh tiny.txt</code> vs <code>ls -l tiny.txt</code>",
+     "Observe: <code>du</code> shows 4KB used even though the file is 1 byte",
+     "This 4KB is one block — the minimum allocation unit",
+     "Research: what is the block size of your filesystem? <code>stat -f tiny.txt</code>",
+     "Understand: internal fragmentation = wasted space inside a block"
+   ]},
+  {id:49,order:49,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"systems",prio:"core",
+   title:"Explore tac, tail, head, more — read files from different directions",
+   tags:["linux","tac","tail","head","more","cli","commands"],
+   concept:"<strong>head</strong> shows the first N lines of a file. <strong>tail</strong> shows the last N lines — critical for log files. <strong>tac</strong> is cat backwards: prints a file in reverse line order. <strong>more</strong> is an interactive pager. <code>tail -f</code> follows a file in real time — every developer uses this for live log monitoring.",
+   howto:[
+     "<code>man tac</code>, <code>man tail</code>, <code>man head</code>, <code>man more</code>",
+     "<code>head -n 5 file.txt</code> — first 5 lines",
+     "<code>tail -n 5 file.txt</code> — last 5 lines",
+     "<code>tail -f /var/log/syslog</code> — watch a live log (Ctrl+C to stop)",
+     "<code>tac file.txt</code> — all lines in reverse order",
+     "Write 5 integers to a file in C, then read them back and print — verify with these tools"
+   ]},
+  {id:50,order:50,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"systems",prio:"core",
+   title:"Explore echo, cat edge cases — avoiding newlines, mixing existing and missing files",
+   tags:["linux","echo","cat","bash","stdin","stderr"],
+   concept:"<code>echo</code> by default appends a newline. <code>echo -n</code> suppresses it — useful when building strings in scripts. <code>cat</code> reads files sequentially: if one file in the list doesn't exist, it prints an error to stderr but continues with the rest. This shows how Unix tools handle partial failures gracefully.",
+   howto:[
+     "<code>man echo</code> — find the flag to suppress the trailing newline",
+     "<code>echo -n 'no newline'</code> vs <code>echo 'with newline'</code> — pipe to hexdump to see",
+     "<code>cat existing.txt nonexistent.txt</code> — observe: output + error interleaved",
+     "Redirect separately: <code>cat existing.txt nonexistent.txt > out.txt 2> err.txt</code>",
+     "Verify: out.txt has the existing file content, err.txt has the error message",
+     "Explore logical gates and 2's complement while you're at it"
+   ]},
+  {id:51,order:51,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"tools",prio:"core",
+   title:"Install all cloud tools to local VM in a single command — build a setup script",
+   tags:["linux","bash","apt","setup","script","vm","tools"],
+   concept:"A <strong>setup script</strong> is a shell script that installs all your tools at once: <code>sudo apt install -y tool1 tool2 tool3 ...</code>. The <code>-y</code> flag auto-confirms all prompts. This means you can provision a fresh machine in minutes. Professional teams use this for onboarding and CI/CD environments.",
+   howto:[
+     "List every tool you've used so far: gcc, lldb, sqlite3, netcat, xxd, exiftool, etc.",
+     "Verify each tool's apt package name: <code>apt-cache search toolname</code>",
+     "Write a single command: <code>sudo apt install -y gcc lldb sqlite3 netcat xxd exiftool curl httpie vim git</code>",
+     "Test it on a fresh Ubuntu VM — does it install everything?",
+     "Convert it to a shell script: <code>setup.sh</code> that you can run on any new machine",
+     "Add it to your GitHub repo so you can always get it with one <code>git clone</code>"
+   ]},
+  {id:52,order:52,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"systems",prio:"core",
+   title:"Stop and restart sshd service — understand systemctl and service management",
+   tags:["linux","ssh","systemctl","service","sshd","daemon"],
+   concept:"<strong>systemctl</strong> is the command to manage system services (daemons) on modern Linux. Services like <code>sshd</code> run in the background. You can start, stop, restart, and check the status of any service. Understanding this is essential for server administration and debugging why a service isn't responding.",
+   howto:[
+     "Check sshd status: <code>sudo systemctl status sshd</code>",
+     "Stop it: <code>sudo systemctl stop sshd</code>",
+     "Try SSHing in from another terminal — it should fail now",
+     "Restart it: <code>sudo systemctl restart sshd</code>",
+     "SSH in again — should work",
+     "Explore: <code>systemctl list-units --type=service</code> — see all running services"
+   ]},
+  {id:53,order:53,phase:"Phase 10 — Linux Internals",phaseIdx:10,cat:"tools",prio:"advanced",
+   title:"Explore pkill — understand process management and why it's used",
+   tags:["linux","pkill","kill","process","pid","signal"],
+   concept:"<code>pkill</code> kills processes by name rather than PID. <code>kill 1234</code> requires knowing the PID; <code>pkill python</code> kills all Python processes at once. Signals matter: SIGTERM (15) asks politely, SIGKILL (9) forces immediate termination. SIGKILL cannot be caught or ignored — it's the last resort.",
+   howto:[
+     "Start a background process: <code>sleep 1000 &</code>",
+     "Find it: <code>ps aux | grep sleep</code> or <code>pgrep sleep</code>",
+     "Kill by name: <code>pkill sleep</code>",
+     "Verify it's gone: <code>ps aux | grep sleep</code>",
+     "Try: <code>pkill -9 processname</code> (SIGKILL — force kill)",
+     "Research: when would you use SIGTERM vs SIGKILL? What's the difference?"
+   ]},
+
+  // ── PHASE 11 — NETWORKING DEEP DIVES ──────────────────────────────────────
+  {id:54,order:54,phase:"Phase 11 — Networking Deep Dives",phaseIdx:11,cat:"networking",prio:"core",
+   title:"Netcat in listen mode on server and VM — observe raw HTTP headers",
+   tags:["networking","netcat","http","headers","raw","tcp"],
+   concept:"Running <code>nc -l PORT</code> creates a raw TCP listener — no HTTP parsing, no protocol overhead. When a browser or curl connects to it, you see the exact bytes sent: the raw HTTP request line, all headers, blank line, and body. This is the most direct way to understand what HTTP actually looks like on the wire.",
+   howto:[
+     "On remote server: <code>nc -l 8080</code>",
+     "From your browser: visit <code>http://server-ip:8080</code>",
+     "In the nc terminal: observe the full raw HTTP request that arrives",
+     "Identify: GET line, Host header, User-Agent, Accept, blank line",
+     "Try from curl: <code>curl http://server-ip:8080</code> — compare headers",
+     "Run Python server in Ubuntu, try connecting from a friend's browser — what happens and why?"
+   ]},
+  {id:55,order:55,phase:"Phase 11 — Networking Deep Dives",phaseIdx:11,cat:"networking",prio:"advanced",
+   title:"Checksum — what it is, how it's computed, why networking depends on it",
+   tags:["networking","checksum","integrity","tcp","crc","hash"],
+   concept:"A <strong>checksum</strong> is a small number computed from a block of data. If even one bit of the data changes, the checksum changes. The receiver recomputes the checksum and compares — if they differ, the data was corrupted in transit. TCP, UDP, and IP all include checksums. It's not encryption — it detects errors, not attackers.",
+   howto:[
+     "Simple checksum: sum all bytes mod 256 — implement this in C",
+     "Change one byte in the data — verify the checksum changes",
+     "Research: how does TCP compute its checksum? What fields are included?",
+     "Understand CRC (Cyclic Redundancy Check) — used in Ethernet and ZIP files",
+     "Try: <code>md5sum file.txt</code> and <code>sha256sum file.txt</code> — these are cryptographic hashes, stronger than checksums",
+     "Question: if a checksum changes, can you correct the error or only detect it?"
+   ]},
+  {id:56,order:56,phase:"Phase 11 — Networking Deep Dives",phaseIdx:11,cat:"networking",prio:"advanced",
+   title:"Port forwarding — how two machines transfer data through a middleman",
+   tags:["networking","port-forwarding","ssh","tunnel","firewall","nat"],
+   concept:"<strong>Port forwarding</strong> lets traffic arriving on one port be redirected to a different destination. SSH local forwarding: <code>ssh -L 8080:remote:3000 user@server</code> means any connection to your localhost:8080 is tunneled through SSH to remote:3000. This is how you access a database or web app on a remote server that isn't publicly exposed.",
+   howto:[
+     "SSH local port forward: <code>ssh -L 8080:localhost:5000 user@remote-server</code>",
+     "Start a web server on port 5000 on the remote server",
+     "On your local machine: visit <code>localhost:8080</code> in the browser",
+     "Observe: traffic travels: local:8080 → SSH tunnel → remote:5000",
+     "Understand NAT: why your home router needs port forwarding for game servers",
+     "Explore: how does this differ from a reverse proxy (like nginx)?"
+   ]},
+  {id:57,order:57,phase:"Phase 11 — Networking Deep Dives",phaseIdx:11,cat:"networking",prio:"advanced",
+   title:"Explore URI, URL, link — understand the difference between all three",
+   tags:["networking","uri","url","link","web","protocol"],
+   concept:"A <strong>URI</strong> (Uniform Resource Identifier) is the broadest term — any string that identifies a resource. A <strong>URL</strong> (Uniform Resource Locator) is a URI that also specifies how to access it (scheme + location). A <strong>link</strong> is informal — it's just an HTML <code>&lt;a href&gt;</code> tag pointing somewhere. Every URL is a URI, but not every URI is a URL.",
+   howto:[
+     "URI examples: <code>mailto:user@email.com</code>, <code>urn:isbn:0451450523</code>, <code>https://example.com</code>",
+     "URL anatomy: <code>scheme://host:port/path?query#fragment</code>",
+     "Break down: <code>https://google.com/search?q=hello#results</code> into all parts",
+     "In HTML: <code>&lt;a href='https://...'&gt;</code> — the href value is a URL",
+     "Record a video: 'Is code and program the same?' — use what you've learned",
+     "Research: what is a URN (Uniform Resource Name) and when is it used?"
+   ]},
+  {id:58,order:58,phase:"Phase 11 — Networking Deep Dives",phaseIdx:11,cat:"networking",prio:"advanced",
+   title:"Explore open source Linux kernel and TCP implementation code",
+   tags:["networking","linux-kernel","tcp","opensource","c","source-code"],
+   concept:"The Linux kernel is written in C and is one of the most read open source codebases in the world. The TCP implementation is in <code>net/ipv4/tcp.c</code> — about 6,000 lines of production C code implementing the entire TCP protocol. Reading it reveals how concepts like connection state machines, retransmission timers, and sliding windows are implemented in real code.",
+   howto:[
+     "Browse the Linux kernel on GitHub: <code>github.com/torvalds/linux</code>",
+     "Navigate to <code>net/ipv4/tcp.c</code> and read the file header comments",
+     "Find the TCP state machine: search for <code>TCP_ESTABLISHED</code>, <code>TCP_SYN_SENT</code>",
+     "Find the <code>tcp_sendmsg()</code> function — this is called when you send data over a socket",
+     "Read the introduction to HTTP book by launchschool",
+     "List 4 responsive websites and 4 non-responsive websites — observe the differences"
+   ]},
+
+  // ── PHASE 12 — HARDWARE & MOBILE ──────────────────────────────────────────
+  {id:59,order:59,phase:"Phase 12 — Hardware & Mobile",phaseIdx:12,cat:"systems",prio:"advanced",
+   title:"SOC chips in your mobile — ARM architecture, licensing, who makes what",
+   tags:["hardware","mobile","arm","soc","qualcomm","apple","samsung"],
+   concept:"A <strong>SoC</strong> (System on Chip) integrates CPU, GPU, RAM, and modem on one chip. <strong>ARM</strong> doesn't manufacture chips — it licenses the instruction set architecture (ISA). Qualcomm (Snapdragon), Apple (A-series, M-series), Samsung (Exynos), and MediaTek all pay ARM royalties and build their own implementations of the ARM ISA.",
+   howto:[
+     "Find your phone's SoC: Settings → About phone → Processor",
+     "Research who designed it: Qualcomm? Apple? Samsung? MediaTek?",
+     "Find the ARM architecture version it uses: ARMv8? ARMv9?",
+     "Understand: ARM licenses the ISA, not the chip design — companies design their own CPUs",
+     "Compare: Apple M4 vs Snapdragon 8 Gen 3 — same ISA, very different performance",
+     "Is JVM running on your mobile? Research: Android uses ART (Android Runtime), not JVM"
+   ]},
+  {id:60,order:60,phase:"Phase 12 — Hardware & Mobile",phaseIdx:12,cat:"systems",prio:"advanced",
+   title:"L1 and L2 cache — memory size, speed, and role in your CPU and mobile processor",
+   tags:["hardware","cache","cpu","l1","l2","memory","speed"],
+   concept:"CPU cache is ultra-fast SRAM sitting between the CPU and RAM. <strong>L1</strong> cache is the fastest (0.5ns access) but tiny (32–128KB per core). <strong>L2</strong> is larger (256KB–4MB) but ~4ns. Main RAM is ~60ns. The cache hierarchy exists because RAM is too slow for a modern CPU running at 4GHz+ — without cache, the CPU would idle 99% of the time waiting for memory.",
+   howto:[
+     "Check your CPU's cache sizes: <code>lscpu | grep cache</code> on Linux",
+     "On macOS: <code>sysctl hw.l1icachesize hw.l2cachesize</code>",
+     "Research your mobile processor's L1/L2 sizes — find the spec sheet",
+     "Understand: L1 is per-core, L2 is often per-core or shared, L3 is shared across all cores",
+     "Calculate: if L1 is 64KB and a cache line is 64 bytes, how many cache lines fit?",
+     "Research: what is cache coherency and why does it matter for multi-core CPUs?"
+   ]},
+
+  // ── PHASE 13 — SDK & DEVELOPER ECOSYSTEM ──────────────────────────────────
+  {id:61,order:61,phase:"Phase 13 — Dev Ecosystem & Cloud",phaseIdx:13,cat:"tools",prio:"advanced",
+   title:"Google I/O and WWDC — explore developer resources, latest SDKs and APIs",
+   tags:["sdk","google-io","wwdc","android","ios","developer","apis"],
+   concept:"<strong>Google I/O</strong> and <strong>WWDC</strong> (Apple's Worldwide Developers Conference) are the two biggest annual developer events. Every year they release new SDK versions, APIs, and frameworks. Staying current with these means knowing what new capabilities your apps can use — AI APIs, new UI frameworks, hardware features, etc.",
+   howto:[
+     "Go to developers.google.com/events/io and developer.apple.com/wwdc",
+     "Find the latest SDK versions announced: what new APIs were added?",
+     "For Google: check Android Studio updates, Gemini APIs, Jetpack Compose changes",
+     "For Apple: check Xcode updates, SwiftUI changes, new CoreML capabilities",
+     "List: what other SDKs exist for developers? (AWS SDK, Firebase SDK, Meta SDK...)",
+     "Pick one new API from each event and read its documentation"
+   ]},
+  {id:62,order:62,phase:"Phase 13 — Dev Ecosystem & Cloud",phaseIdx:13,cat:"ai",prio:"advanced",
+   title:"Find open LLM models — where to find them and how to run them locally",
+   tags:["ai","llm","huggingface","ollama","open-source","models","local"],
+   concept:"Open LLMs like <strong>Llama 3</strong>, <strong>Mistral</strong>, <strong>Gemma</strong>, and <strong>Phi-3</strong> can run locally on your machine. <strong>HuggingFace</strong> is the largest repository of open models — over 500,000 models. <strong>Ollama</strong> makes running them as simple as <code>ollama pull llama3</code>. No API key, no cost, full privacy.",
+   howto:[
+     "Go to huggingface.co/models — browse the top downloaded models",
+     "Install Ollama: follow instructions at ollama.com",
+     "Pull a model: <code>ollama pull llama3</code> or <code>ollama pull phi3</code>",
+     "Chat with it: <code>ollama run llama3</code>",
+     "Find 2 open source projects on GitHub and make 2 contributions (even small ones)",
+     "Research: what's the difference between a 7B, 13B, and 70B parameter model?"
+   ]},
+  {id:63,order:63,phase:"Phase 13 — Dev Ecosystem & Cloud",phaseIdx:13,cat:"tools",prio:"advanced",
+   title:"Explore REPL environments for Java, C, SQL, JavaScript — interactive coding playgrounds",
+   tags:["repl","java","javascript","sql","c","playground","interactive"],
+   concept:"A <strong>REPL</strong> (Read-Eval-Print Loop) lets you type code and see results immediately — no compile step, no file creation. Python has one built-in (<code>python3</code>). Java has JShell. JavaScript has the browser console. SQL has sqlite3's interactive mode. REPLs are the fastest way to test a small idea or learn a new language feature.",
+   howto:[
+     "Java REPL: <code>jshell</code> — type Java expressions and see results instantly",
+     "JavaScript: open browser DevTools (F12) → Console tab",
+     "SQL: <code>sqlite3</code> in interactive mode (you've done this!)",
+     "C: try <code>cling</code> (C++ REPL) or use an online playground like godbolt.org",
+     "In each REPL: define a simple function and call it 3 times",
+     "Observe: how does error feedback differ between REPLs?"
+   ]},
+  {id:64,order:64,phase:"Phase 13 — Dev Ecosystem & Cloud",phaseIdx:13,cat:"ai",prio:"advanced",
+   title:"Encryption vs decryption, encoding vs decoding — understand the key differences with examples",
+   tags:["security","encryption","encoding","decoding","base64","aes","rsa"],
+   concept:"<strong>Encryption</strong> requires a key to reverse (decrypt). Without the key, the data is unreadable — AES, RSA. <strong>Encoding</strong> has no key — anyone can decode it. It's just a format transformation — Base64, URL encoding, UTF-8. Confusing these is a serious security mistake: Base64 is NOT encryption, it provides zero security.",
+   howto:[
+     "Encode to Base64: <code>echo 'hello' | base64</code>",
+     "Decode it: <code>echo 'aGVsbG8K' | base64 --decode</code>",
+     "Understand: Base64 is just text-safe binary encoding — not secret at all",
+     "Encrypt with OpenSSL: <code>openssl enc -aes-256-cbc -in file.txt -out file.enc</code>",
+     "Try to open file.enc without the key — observe it's unreadable",
+     "Decrypt: <code>openssl enc -d -aes-256-cbc -in file.enc -out file.txt</code>"
    ]}
 ];
 
@@ -900,7 +1198,12 @@ const PHASES={
   5:{emoji:"🛠️",desc:"VIM, binary tools, file I/O, GitHub"},
   6:{emoji:"🤖",desc:"LLMs, Transformers, Agents, RAG"},
   7:{emoji:"🗄️",desc:"SQL, SQLite, indexing, performance"},
-  8:{emoji:"🚀",desc:"Open source, cloud, advanced projects"}
+  8:{emoji:"🚀",desc:"Open source, cloud, advanced projects"},
+  9:{emoji:"🔬",desc:"Float internals, call stack, error handling"},
+  10:{emoji:"🐧",desc:"RAM vs disk, blocks, services, process mgmt"},
+  11:{emoji:"📡",desc:"Raw TCP, checksum, port forwarding, kernel code"},
+  12:{emoji:"📱",desc:"SoC chips, ARM licensing, CPU cache hierarchy"},
+  13:{emoji:"🌍",desc:"SDKs, open models, REPLs, encryption vs encoding"}
 };
 
 let currentCat='all', currentStatus='all';

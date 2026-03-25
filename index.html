@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AIK Tasks — Learning Roadmap</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0e0f14;
+    --bg2: #161820;
+    --bg3: #1e2028;
+    --card: #1a1c24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e6de;
+    --muted: #7a7870;
+    --accent: #6c63ff;
+    --accent2: #8b83ff;
+    --green: #3dd68c;
+    --amber: #f5a623;
+    --red: #e24b4a;
+    --teal: #1dcfb0;
+    --pink: #e86da4;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: 'Sora', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+  
+  /* Top Bar */
+  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 16px; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .topbar-logo { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--accent2); letter-spacing: -0.5px; }
+  .topbar-logo span { color: var(--muted); }
+  .topbar-divider { width: 1px; height: 20px; background: var(--border2); }
+  .topbar-title { color: var(--muted); font-size: 13px; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .progress-pill { background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-family: var(--mono); color: var(--green); display: flex; align-items: center; gap: 6px; }
+  .progress-pill::before { content: ''; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+  /* Layout */
+  .layout { display: flex; height: calc(100vh - 56px); overflow: hidden; }
+  
+  /* Sidebar */
+  .sidebar { width: 260px; min-width: 260px; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px 0; }
+  .sidebar::-webkit-scrollbar { width: 4px; } 
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .sidebar-section { padding: 0 12px 8px; }
+  .sidebar-label { font-size: 10px; font-family: var(--mono); color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 8px 6px; }
+  .cat-btn { width: 100%; text-align: left; background: none; border: none; color: var(--muted); cursor: pointer; padding: 7px 10px; border-radius: 7px; font-family: var(--font); font-size: 13px; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+  .cat-btn:hover { background: var(--bg3); color: var(--text); }
+  .cat-btn.active { background: rgba(108,99,255,0.15); color: var(--accent2); }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cat-count { margin-left: auto; font-size: 11px; font-family: var(--mono); background: var(--bg3); padding: 1px 7px; border-radius: 10px; }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; padding: 24px; }
+  .main::-webkit-scrollbar { width: 4px; }
+  .main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* Phase Banner */
+  .phase-banner { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); border-left: 3px solid var(--accent); }
+  .phase-icon { font-size: 22px; }
+  .phase-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .phase-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  
+  /* Task Grid */
+  .task-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+
+  /* Task Card */
+  .task-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .task-card:hover { border-color: var(--border2); box-shadow: 0 0 0 1px rgba(108,99,255,0.15); }
+  .task-card.expanded { border-color: rgba(108,99,255,0.35); }
+  .task-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .task-num { font-family: var(--mono); font-size: 11px; color: var(--muted); min-width: 28px; }
+  .task-priority { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 0.5px; }
+  .p-foundation { background: rgba(61,214,140,0.12); color: var(--green); }
+  .p-core { background: rgba(108,99,255,0.15); color: var(--accent2); }
+  .p-advanced { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .p-project { background: rgba(29,207,176,0.12); color: var(--teal); }
+  .task-title { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .task-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .task-card.expanded .task-chevron { transform: rotate(90deg); }
+  .task-tags { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 10px 56px; }
+  .tag { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 6px; background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+
+  /* Expanded Detail */
+  .task-detail { border-top: 1px solid var(--border); background: var(--bg2); display: none; }
+  .task-card.expanded .task-detail { display: block; }
+  .detail-inner { padding: 18px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .detail-inner { grid-template-columns: 1fr; } }
+  
+  .detail-section { }
+  .detail-label { font-size: 10px; font-family: var(--mono); color: var(--muted); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
+  .detail-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+  .detail-text code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 4px; color: var(--accent2); }
+
+  .steps-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .steps-list li { display: flex; gap: 8px; font-size: 12px; color: var(--text); }
+  .step-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: var(--mono); color: var(--muted); flex-shrink: 0; margin-top: 1px; }
+
+  .concept-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .concept-box strong { color: var(--teal); font-weight: 500; }
+
+  .status-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .status-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+  .status-check:hover { border-color: var(--green); }
+  .status-check.done { background: var(--green); border-color: var(--green); }
+  .status-check.done::after { content: '✓'; color: #0e0f14; font-size: 11px; font-weight: 700; }
+  .status-label { font-size: 12px; color: var(--muted); }
+
+  /* Filter Bar */
+  .filterbar { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .filter-btn { font-size: 12px; font-family: var(--mono); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border2); background: none; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { background: var(--bg3); color: var(--text); }
+  .filter-btn.active { background: rgba(108,99,255,0.2); border-color: var(--accent); color: var(--accent2); }
+  .filter-search { flex: 1; min-width: 160px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
+  .filter-search:focus { border-color: var(--accent); }
+  .filter-search::placeholder { color: var(--muted); }
+
+  /* Empty */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">AIK<span>/</span>tasks</div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-title">Learning Roadmap</div>
+  <div class="topbar-right">
+    <div class="progress-pill" id="progress-pill">0 / 0 done</div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Categories</div>
+      <button class="cat-btn active" onclick="filterCat('all')" data-cat="all">
+        <span class="cat-dot" style="background:#7a7870"></span> All Tasks
+        <span class="cat-count" id="cnt-all">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('systems')" data-cat="systems">
+        <span class="cat-dot" style="background:#3dd68c"></span> Systems & OS
+        <span class="cat-count" id="cnt-systems">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('c')" data-cat="c">
+        <span class="cat-dot" style="background:#6c63ff"></span> C Programming
+        <span class="cat-count" id="cnt-c">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('python')" data-cat="python">
+        <span class="cat-dot" style="background:#f5a623"></span> Python
+        <span class="cat-count" id="cnt-python">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('networking')" data-cat="networking">
+        <span class="cat-dot" style="background:#1dcfb0"></span> Networking & Web
+        <span class="cat-count" id="cnt-networking">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('tools')" data-cat="tools">
+        <span class="cat-dot" style="background:#e86da4"></span> Tools & Workflow
+        <span class="cat-count" id="cnt-tools">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('ai')" data-cat="ai">
+        <span class="cat-dot" style="background:#e24b4a"></span> AI & ML
+        <span class="cat-count" id="cnt-ai">0</span>
+      </button>
+      <button class="cat-btn" onclick="filterCat('db')" data-cat="db">
+        <span class="cat-dot" style="background:#8b83ff"></span> Databases
+        <span class="cat-count" id="cnt-db">0</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Priority</div>
+      <button class="cat-btn" onclick="filterPriority('foundation')">
+        <span class="cat-dot" style="background:#3dd68c"></span> Foundation
+      </button>
+      <button class="cat-btn" onclick="filterPriority('core')">
+        <span class="cat-dot" style="background:#6c63ff"></span> Core
+      </button>
+      <button class="cat-btn" onclick="filterPriority('advanced')">
+        <span class="cat-dot" style="background:#f5a623"></span> Advanced
+      </button>
+      <button class="cat-btn" onclick="filterPriority('project')">
+        <span class="cat-dot" style="background:#1dcfb0"></span> Project
+      </button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="filterbar">
+      <input class="filter-search" id="search-input" placeholder="Search tasks..." oninput="renderTasks()"/>
+      <button class="filter-btn active" id="btn-all" onclick="filterStatus('all')">All</button>
+      <button class="filter-btn" id="btn-todo" onclick="filterStatus('todo')">To Do</button>
+      <button class="filter-btn" id="btn-done" onclick="filterStatus('done')">Done</button>
+    </div>
+    <div id="task-container"></div>
+  </main>
+</div>
+
+<script>
+const TASKS = [
+  // ── PHASE 1: ABSOLUTE FOUNDATION ──────────────────────────────────────────
+  {
+    id: 1, order: 1, phase: "Phase 1 — Foundation", cat: "systems",
+    priority: "foundation", title: "Understand file systems: naming, storage, OS disk location, space management",
+    tags: ["os", "filesystem", "inode"],
+    concept: "A <strong>file system</strong> is the OS layer that organises bytes on disk into named files and directories. The OS uses <strong>inodes</strong> (index nodes) to store metadata and pointers to actual data blocks. Files aren't stored contiguously — they're spread across fixed-size blocks (~4KB), and the inode tracks where each block lives.",
+    howto: [
+      "Read about FAT32, ext4, and NTFS — how each names and locates files",
+      "Learn what an inode is: it holds permissions, size, timestamps, and block pointers",
+      "Understand block allocation: why 1-byte file takes 4KB on disk",
+      "Explore: `ls -li` to see inode numbers, `df -h` for disk usage",
+      "Study HFSX vs HFS+ case sensitivity differences",
+      "Research: what happens when an inode is corrupted or lost?"
+    ]
+  },
+  {
+    id: 2, order: 2, phase: "Phase 1 — Foundation", cat: "systems",
+    priority: "foundation", title: "ASCII chart, UTF-8, UTF-16 — how text is encoded and stored",
+    tags: ["encoding", "ascii", "utf8", "binary"],
+    concept: "Every character you type is actually a <strong>number</strong>. ASCII maps 128 characters to bytes 0–127. UTF-8 extends this to all Unicode characters using 1–4 bytes per character. UTF-16 uses 2–4 bytes. Understanding encoding is critical for reading binary files and debugging text issues.",
+    howto: [
+      "Write a C program to print the full ASCII chart (0–127)",
+      "Use `xxd` or `hexedit` to see hex values of a .txt file you write",
+      "Save 'ABCD' to a file and verify hex values are 0x41 0x42 0x43 0x44",
+      "Understand why 'A' - 32 = 'a' (0x41 - 0x20 = 0x61)",
+      "Explore file formats: html, xml, markdown, json, txt — all are plain text"
+    ]
+  },
+  {
+    id: 3, order: 3, phase: "Phase 1 — Foundation", cat: "systems",
+    priority: "foundation", title: "Absolute path vs relative path — understand filesystem navigation",
+    tags: ["linux", "path", "filesystem"],
+    concept: "An <strong>absolute path</strong> starts from root (`/home/user/file.txt`). A <strong>relative path</strong> starts from your current directory (`../file.txt`). Every command you type in a terminal uses one of these — understanding them is fundamental to everything else.",
+    howto: [
+      "Open terminal, run `pwd` — that's your absolute path",
+      "Navigate with `cd ..` (relative), then `cd /home/user` (absolute)",
+      "Create a directory structure and practice navigating with both",
+      "Understand `.` (current dir) and `..` (parent dir)",
+      "Try: `cat ./file.txt` vs `cat /full/path/to/file.txt`"
+    ]
+  },
+  {
+    id: 4, order: 4, phase: "Phase 1 — Foundation", cat: "c",
+    priority: "foundation", title: "C declaration statements, commenting, errors, and warnings",
+    tags: ["c", "syntax", "compiler", "errors"],
+    concept: "In C, <strong>declarations</strong> tell the compiler a variable's type before you use it. Comments are `// single line` or `/* multi-line */`. The compiler produces <strong>errors</strong> (code won't compile) and <strong>warnings</strong> (code compiles but may behave unexpectedly). Understanding these messages is a core skill.",
+    howto: [
+      "Write a C file with int, char, float declarations and comment each one",
+      "Deliberately comment out a declaration — compile and record the error",
+      "Use `gcc -Wall` to see all warnings, even for technically valid code",
+      "Write a program that uses an uninitialised variable — observe warning",
+      "Document: what exact compiler message does each type of mistake produce?"
+    ]
+  },
+  {
+    id: 5, order: 5, phase: "Phase 1 — Foundation", cat: "tools",
+    priority: "foundation", title: "Explore grep and find commands in Linux",
+    tags: ["linux", "grep", "find", "cli"],
+    concept: "<strong>grep</strong> searches file contents for patterns (text matching). <strong>find</strong> searches the filesystem for files by name, size, date, etc. These two tools together cover 80% of 'I need to find something' situations in a Linux system.",
+    howto: [
+      "Run `man grep` and `man find` — read the first 2 pages",
+      "Use `grep -r 'hello' .` to search all files recursively in current dir",
+      "Use `find . -name '*.c'` to find all C files",
+      "Combine: `find . -name '*.c' | xargs grep 'main'`",
+      "Try grep with -n (line numbers), -i (case insensitive), -v (invert match)",
+      "Use find with -mtime (modified time), -size, -type f/d"
+    ]
+  },
+  {
+    id: 6, order: 6, phase: "Phase 1 — Foundation", cat: "tools",
+    priority: "foundation", title: "Create custom binaries, add folder to PATH variable",
+    tags: ["linux", "bash", "path", "binary"],
+    concept: "When you type a command, the shell looks through directories listed in <strong>$PATH</strong> in order, finding the first matching binary. By adding your own folder to PATH (via `.bashrc`), your custom programs become available anywhere — just like `ls` or `cat`.",
+    howto: [
+      "Write a simple C program (e.g., prints 'hello from my tool')",
+      "Compile it: `gcc hello.c -o myhello`",
+      "Create a folder: `mkdir ~/mybin` and move the binary there",
+      "Edit `~/.bashrc`: add `export PATH=$PATH:~/mybin`",
+      "Run `source ~/.bashrc` then test `myhello` from three different directories",
+      "Verify with `which myhello` and `echo $PATH`"
+    ]
+  },
+  // ── PHASE 2: C PROGRAMMING ─────────────────────────────────────────────────
+  {
+    id: 7, order: 7, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Write a bill program: item name, quantity, cost, total",
+    tags: ["c", "stdio", "program"],
+    concept: "This task practices C fundamentals: strings, floats, loops, and formatted output with `printf`. The `fprintf` function lets you write to files — combining it with `fopen`/`fclose` means you can generate a real bill file.",
+    howto: [
+      "Declare struct with char name[], int qty, float price",
+      "Use scanf to take 3 items as input",
+      "Calculate total = qty * price for each item, sum for grand total",
+      "Use printf with format specifiers: %s, %d, %f, %.2f",
+      "Extension: save the bill to a file using fopen, fprintf, fclose"
+    ]
+  },
+  {
+    id: 8, order: 8, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Debug product_function.c — find local variable addresses, return addresses, stack order",
+    tags: ["c", "debugging", "lldb", "memory", "stack"],
+    concept: "Every function call creates a <strong>stack frame</strong> on the call stack. Local variables live inside these frames, at specific memory addresses. The <strong>return address</strong> is stored in the frame so the CPU knows where to go after the function finishes. Addresses on the stack grow downward (higher addresses at bottom).",
+    howto: [
+      "Compile with debug symbols: `gcc -g product_function.c -o product`",
+      "Open in lldb: `lldb ./product`",
+      "Set breakpoint in a function: `b function_name`",
+      "Run: `r`, then use `frame variable` to see local variables",
+      "Use `p &variable_name` to print the memory address",
+      "Use `register read` to see the return address register (lr/rip)",
+      "Observe: are addresses increasing or decreasing as you go deeper?"
+    ]
+  },
+  {
+    id: 9, order: 9, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Debug uppercase converter — print memory of variable at every line",
+    tags: ["c", "debugging", "lldb", "memory", "ascii"],
+    concept: "The expression `ch - ('a' - 'A')` converts lowercase to uppercase because 'a'-'A' = 32 = 0x20. So subtracting 32 from any lowercase letter gives its uppercase equivalent. This works because ASCII was designed with exactly this gap.",
+    howto: [
+      "Write the program: char ch; scanf('%c', &ch); ch = ch - ('a'-'A'); printf('%c', ch);",
+      "Compile with -g flag for debug symbols",
+      "In lldb: set breakpoint at each line with `b filename.c:line_number`",
+      "After each step: `memory read &ch` to see raw bytes at ch's address",
+      "Step with `n` (next line), observe how memory value changes",
+      "Calculate: 'a' is 0x61, 'A' is 0x41, difference is 0x20 = 32"
+    ]
+  },
+  {
+    id: 10, order: 10, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Use input redirection for sum.c — read from input.txt using < and >",
+    tags: ["c", "bash", "redirection", "io"],
+    concept: "<strong>Redirection</strong> in bash lets you connect files to a program's stdin/stdout. `< input.txt` feeds the file as keyboard input. `> output.txt` captures printed output. `2> error.txt` captures error messages. This is how you automate programs that normally need interactive input.",
+    howto: [
+      "Write sum.c that reads N numbers using scanf and prints their sum",
+      "Create input.txt with numbers on separate lines",
+      "Run: `./sum < input.txt` — program reads from file, not keyboard",
+      "Run: `./sum < input.txt > output.txt` — no screen output, all goes to file",
+      "Try: `./sum < input.txt > output.txt 2> error.txt`",
+      "Verify output: `cat output.txt`"
+    ]
+  },
+  {
+    id: 11, order: 11, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Write program to print bytes of an integer in little-endian and big-endian",
+    tags: ["c", "endianness", "binary", "bitwise"],
+    concept: "<strong>Little-endian</strong>: least significant byte is stored first in memory (x86, ARM). <strong>Big-endian</strong>: most significant byte first (network byte order). If you store 0x12345678 at address 100 on little-endian, memory reads: 78 56 34 12. This matters when sharing binary data between systems or reading raw files.",
+    howto: [
+      "Declare int n = 0x12345678; then cast to char* to access individual bytes",
+      "Loop through sizeof(int) bytes and print each as hex: printf('0x%02x ', ptr[i])",
+      "Observe order — that's your system's native byte order (likely little-endian)",
+      "To print big-endian: loop backwards from sizeof(int)-1 to 0",
+      "Verify: store 0x44434241 in memory — should spell 'DCBA' if printed as chars"
+    ]
+  },
+  {
+    id: 12, order: 12, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "advanced", title: "Memory segments: global/static in data section, verify with readelf and gdb",
+    tags: ["c", "memory", "elf", "readelf", "segments"],
+    concept: "A compiled C program has <strong>segments</strong>: .text (code), .data (initialised globals/statics), .bss (uninitialised globals), stack (local variables), heap (malloc). Global and static variables live in .data/.bss — they persist for the entire program lifetime, unlike local variables which vanish when the function returns.",
+    howto: [
+      "Write C with: global int g=10; static int s=20; int local=30; in a function called twice",
+      "Compile: `gcc -g prog.c -o prog`",
+      "Run `readelf -a prog` — look for .data and .bss sections",
+      "In lldb: `p &g` vs `p &local` — notice address ranges are very different",
+      "Find data segment address from /proc/PID/maps during execution",
+      "Verify static variable retains value between two function calls"
+    ]
+  },
+  {
+    id: 13, order: 13, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "advanced", title: "Compile two C files — compare .i preprocessed output with and without math.h",
+    tags: ["c", "compiler", "preprocessor", "clang"],
+    concept: "The C compiler has 4 stages: <strong>preprocessor</strong> (expands #include/#define → .i file), compiler (generates assembly → .s file), assembler (machine code → .o file), linker (combines .o files → executable). The .i file shows you exactly what code the compiler actually sees after preprocessing.",
+    howto: [
+      "File 1: only `#include <stdio.h>` with a main function",
+      "File 2: `#include <stdio.h>` and `#include <math.h>` with same main",
+      "Use clang: `clang -save-temps file1.c -o f1` and same for file2",
+      "Open both .i files: `wc -l file1.i` vs `wc -l file2.i`",
+      "Observe: math.h adds thousands of lines of declarations",
+      "Find where stdio.h content ends and your code begins in the .i file"
+    ]
+  },
+  {
+    id: 14, order: 14, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "core", title: "Typedef: create user-defined data types in C",
+    tags: ["c", "typedef", "struct"],
+    concept: "<strong>typedef</strong> creates an alias for a type. `typedef unsigned char byte;` lets you write `byte x = 5;` instead of `unsigned char x = 5;`. Most importantly, `typedef struct { ... } Point;` lets you use Point instead of `struct Point` everywhere. This is why C code in real projects is readable.",
+    howto: [
+      "typedef int Meters; — declare a variable of type Meters",
+      "typedef struct { float x; float y; } Point; — create and use Point",
+      "typedef char* String; — see how it can simplify pointer declarations",
+      "Understand typedef vs #define: typedef is type-safe, #define is text substitution",
+      "Read struct usage in real Linux kernel headers (e.g. linux/list.h)"
+    ]
+  },
+  {
+    id: 15, order: 15, phase: "Phase 2 — C Programming", cat: "c",
+    priority: "advanced", title: "Create binary on Ubuntu, push via GitHub, pull on local machine, inspect with hexedit",
+    tags: ["c", "github", "binary", "hexedit"],
+    concept: "A <strong>compiled binary</strong> is an ELF (Executable and Linkable Format) file on Linux. It contains magic bytes (7f 45 4c 46), architecture info, and your machine code. `hexedit` lets you see and modify the raw bytes. You CAN push binaries to GitHub, but they aren't text — git stores them as blobs.",
+    howto: [
+      "Compile sum.c on Ubuntu VM: `gcc sum.c -o sum.exe`",
+      "Init a git repo, add the binary: `git add sum.exe && git commit -m 'binary'`",
+      "Push to GitHub: `git push origin main`",
+      "On local machine: `git pull` to download",
+      "Run: `./sum.exe` — observe 'cannot execute binary file' if architecture differs",
+      "Open with hexedit: first 4 bytes should be 7f 45 4c 46 (ELF magic)"
+    ]
+  },
+  // ── PHASE 3: PYTHON ─────────────────────────────────────────────────────────
+  {
+    id: 16, order: 16, phase: "Phase 3 — Python", cat: "python",
+    priority: "core", title: "Experiments with classes, objects, instances in Python",
+    tags: ["python", "oop", "class", "instance"],
+    concept: "A <strong>class</strong> is a blueprint. An <strong>object</strong> is a thing built from that blueprint. An <strong>instance</strong> is a specific object in memory. In Python, `class Dog:` defines the blueprint; `rex = Dog()` creates an instance. Each instance has its own data (attributes) but shares methods with all other instances of the same class.",
+    howto: [
+      "Define a simple class: `class Car: def __init__(self, brand): self.brand = brand`",
+      "Create 3 instances: car1 = Car('Toyota'), car2 = Car('Honda'), etc.",
+      "Use `type()` and `isinstance()` to inspect objects",
+      "Add methods to the class, call them on instances",
+      "Use Python REPL to experiment interactively",
+      "Use `dir(obj)` to see all attributes and methods"
+    ]
+  },
+  {
+    id: 17, order: 17, phase: "Phase 3 — Python", cat: "python",
+    priority: "core", title: "Debug Python sum.py using PDB — step through and inspect variables",
+    tags: ["python", "pdb", "debugging"],
+    concept: "<strong>PDB</strong> (Python Debugger) is Python's built-in debugger. It works like lldb but for Python. You can step through code line by line, inspect variables, and even change values mid-execution. It's essential for understanding how Python code actually executes.",
+    howto: [
+      "Add `import pdb; pdb.set_trace()` at the top of sum.py",
+      "Run the file: `python sum.py` — it will pause at the trace point",
+      "Use `n` (next line), `s` (step into function), `c` (continue)",
+      "Use `p variable_name` to print any variable",
+      "Use `l` to see current code context, `bt` for call stack",
+      "Try `locals()` and `args()` inside a function to see all local variables"
+    ]
+  },
+  {
+    id: 18, order: 18, phase: "Phase 3 — Python", cat: "python",
+    priority: "core", title: "Write Python script to connect to database and execute flight queries",
+    tags: ["python", "sqlite", "database", "sql"],
+    concept: "Python's <strong>sqlite3</strong> module lets you connect to a database file and run SQL queries with just a few lines of code. The pattern is: connect → create cursor → execute query → fetch results → close. This is the foundation of all database-driven applications.",
+    howto: [
+      "import sqlite3; conn = sqlite3.connect('flights.db')",
+      "cursor = conn.cursor()",
+      "cursor.execute('SELECT * FROM flights WHERE origin=\"VTZ\"')",
+      "rows = cursor.fetchall()",
+      "for row in rows: print(row)",
+      "conn.close()",
+      "Extension: use parameterised queries with ? to avoid SQL injection"
+    ]
+  },
+  {
+    id: 19, order: 19, phase: "Phase 3 — Python", cat: "python",
+    priority: "advanced", title: "Create 2 Python functions in REPL, call each 3 times, see disassembly of .py file",
+    tags: ["python", "repl", "bytecode", "dis"],
+    concept: "Python compiles your code to <strong>bytecode</strong> before running it. You can see this bytecode using the `dis` module. Unlike C which compiles to machine code, Python bytecode runs on the Python Virtual Machine (PVM). This explains why Python is slower than C but faster to develop with.",
+    howto: [
+      "Open Python REPL: `python3`",
+      "Define: `def add(a,b): return a+b` and `def mul(a,b): return a*b`",
+      "Call each 3 times, observe output",
+      "In a separate .py file: `import dis; dis.dis(add)` — see bytecode",
+      "Compare: the LOAD_FAST, BINARY_ADD, RETURN_VALUE instructions",
+      "Also try: python -m dis yourfile.py from terminal"
+    ]
+  },
+  // ── PHASE 4: NETWORKING & WEB ───────────────────────────────────────────────
+  {
+    id: 20, order: 20, phase: "Phase 4 — Networking & Web", cat: "networking",
+    priority: "core", title: "HTTP vs HTTPie — understand HTTP protocol, use Postman",
+    tags: ["http", "api", "postman", "networking"],
+    concept: "<strong>HTTP</strong> (HyperText Transfer Protocol) defines how browsers/clients talk to servers. A request has: method (GET/POST), URL, headers, optional body. A response has: status code (200 OK, 404 Not Found), headers, body. <strong>HTTPie</strong> and <strong>Postman</strong> are tools that let you send HTTP requests without writing code.",
+    howto: [
+      "Install HTTPie: `sudo apt install httpie`",
+      "Make a GET request: `http GET https://jsonplaceholder.typicode.com/posts/1`",
+      "Open Postman, create same request graphically",
+      "Observe headers: Content-Type, Authorization, User-Agent",
+      "Try POST request with a JSON body",
+      "Understand: 2xx = success, 4xx = client error, 5xx = server error"
+    ]
+  },
+  {
+    id: 21, order: 21, phase: "Phase 4 — Networking & Web", cat: "networking",
+    priority: "core", title: "Client timeout: server doesn't respond within 2 min — observe client disconnect",
+    tags: ["networking", "http", "timeout", "python"],
+    concept: "A <strong>timeout</strong> is a safety valve: if a server doesn't respond within N seconds, the client gives up and closes the connection. Without timeouts, a client could wait forever for a crashed server. TCP itself has no timeout — it's the application layer (HTTP, your code) that implements them.",
+    howto: [
+      "Start a Python HTTP server with a breakpoint in `get_students` function",
+      "From another terminal/machine: `curl http://localhost:5000/students`",
+      "In debugger: hit the breakpoint, then do NOTHING — just wait",
+      "After 2 minutes, observe the curl command timing out",
+      "Check server logs: did the server see the disconnection?",
+      "Explore: `curl --max-time 10` to set explicit timeout"
+    ]
+  },
+  {
+    id: 22, order: 22, phase: "Phase 4 — Networking & Web", cat: "networking",
+    priority: "advanced", title: "Explore netcat and curl — send raw HTTP requests",
+    tags: ["networking", "netcat", "curl", "http", "tcp"],
+    concept: "<strong>netcat</strong> (nc) is the 'Swiss army knife' of networking — it opens raw TCP connections with no protocol overhead. You can manually type HTTP requests character by character to a server. <strong>curl</strong> is higher level but lets you see exact request/response headers with `-v`.",
+    howto: [
+      "nc -l 8080 on one terminal (listen mode)",
+      "nc localhost 8080 on another — type any text, see it appear on the other side",
+      "Connect to a real server: `nc google.com 80` then type: `GET / HTTP/1.0\\n\\n`",
+      "Do same with curl: `curl -v http://google.com` — see all headers",
+      "Use `curl -I` for headers-only response",
+      "Run Python server in Ubuntu, try to connect from a friend's browser"
+    ]
+  },
+  {
+    id: 23, order: 23, phase: "Phase 4 — Networking & Web", cat: "networking",
+    priority: "advanced", title: "Explore ed25519 keys — how pub/private keys are generated and used",
+    tags: ["security", "encryption", "ssh", "ed25519"],
+    concept: "<strong>ed25519</strong> is an elliptic-curve signature algorithm used in modern SSH. You generate a <strong>key pair</strong>: private key (secret, never share) and public key (safe to share). Anyone with your public key can verify your signature. Only you with the private key can create a valid signature. SSH uses this to log in without passwords.",
+    howto: [
+      "Generate a key pair: `ssh-keygen -t ed25519 -C 'your@email'`",
+      "Inspect: `cat ~/.ssh/id_ed25519.pub` — this is the public key",
+      "The private key is base64-encoded — view its structure with `cat ~/.ssh/id_ed25519`",
+      "Add public key to `~/.ssh/authorized_keys` on a server",
+      "Connect without password: `ssh user@server`",
+      "Research: how long would a supercomputer take to brute-force ed25519?"
+    ]
+  },
+  {
+    id: 24, order: 24, phase: "Phase 4 — Networking & Web", cat: "networking",
+    priority: "core", title: "Explore HTML tags: p, pre, br — understand DOM",
+    tags: ["html", "dom", "web"],
+    concept: "The <strong>DOM</strong> (Document Object Model) is the browser's in-memory representation of an HTML page as a tree of nodes. `<p>` creates a paragraph block. `<pre>` preserves whitespace and uses monospace font. `<br>` inserts a line break inline. Understanding DOM is how JavaScript controls web pages.",
+    howto: [
+      "Create an HTML file with all three tags, open in browser",
+      "Open browser DevTools (F12) → Elements tab — see the DOM tree",
+      "Right-click any element → Inspect to highlight it in the DOM",
+      "In Console: `document.querySelector('p').textContent = 'Hello'`",
+      "In Network tab: reload and observe HTTP request for the HTML file",
+      "Understand the difference between p (block) and br (inline)"
+    ]
+  },
+  // ── PHASE 5: TOOLS & WORKFLOW ───────────────────────────────────────────────
+  {
+    id: 25, order: 25, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "core", title: "Explore VIM — basic navigation, modes, editing",
+    tags: ["vim", "editor", "linux"],
+    concept: "<strong>VIM</strong> has 3 main modes: <strong>Normal</strong> (default, for navigation), <strong>Insert</strong> (for typing, press `i`), <strong>Visual</strong> (for selecting, press `v`). The learning curve is steep but muscle memory builds fast. Every developer on Linux needs at minimum: how to open a file, edit it, save it, and quit.",
+    howto: [
+      "Open a file: `vim filename.txt`",
+      "Enter insert mode: press `i`; type something; press Esc to go back to Normal",
+      "Navigate in Normal mode: h(left) j(down) k(up) l(right)",
+      "Save: `:w` | Quit: `:q` | Save and quit: `:wq` | Force quit: `:q!`",
+      "Search: `/searchterm` then `n` for next match",
+      "Undo: `u` | Redo: `Ctrl+r`"
+    ]
+  },
+  {
+    id: 26, order: 26, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "core", title: "Explore exiftool, xxd, readelf — inspect file metadata and binary structure",
+    tags: ["tools", "binary", "metadata", "exif"],
+    concept: "<strong>Metadata</strong> is data about data. A photo has metadata: camera model, GPS location, timestamp. A binary has metadata: ELF header, architecture, compilation flags. Understanding metadata in different contexts (file, image, database, book index) is a recurring theme in computing.",
+    howto: [
+      "`exiftool photo.jpg` — see all metadata embedded in an image",
+      "`xxd file.bin | head -20` — see hex dump of first 160 bytes",
+      "`readelf -h myprogram` — ELF header: architecture, entry point, section count",
+      "`readelf -S myprogram` — all sections: .text, .data, .bss sizes",
+      "Download an APK file, rename to .zip, unzip and explore its structure",
+      "What does index mean in: a textbook, a database, an array? Write it down."
+    ]
+  },
+  {
+    id: 27, order: 27, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "core", title: "SSH: man ssh, port forwarding, handle files/folders with spaces",
+    tags: ["ssh", "linux", "networking"],
+    concept: "<strong>SSH</strong> (Secure Shell) creates an encrypted tunnel between two machines. Beyond remote login, SSH supports <strong>port forwarding</strong>: a local port on your machine tunnels to a remote port, letting you access services (databases, web apps) on a remote server through the encrypted SSH connection.",
+    howto: [
+      "`man ssh` — read the SYNOPSIS section, understand all flags",
+      "SSH into a remote machine: `ssh user@ip-address`",
+      "Local port forward: `ssh -L 8080:localhost:3000 user@server`",
+      "Handle files with spaces: use quotes `'my file.txt'` or escape `my\\ file.txt`",
+      "Use `ls -la` to see hidden files, permissions, timestamps",
+      "Stop and restart sshd service: `sudo systemctl restart sshd`"
+    ]
+  },
+  {
+    id: 28, order: 28, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "advanced", title: "Daily 2–3 min video on a topic, upload to YouTube channel",
+    tags: ["content", "teaching", "youtube"],
+    concept: "Teaching a concept forces you to understand it deeply enough to explain it simply. The Feynman technique: if you can explain it plainly to a beginner, you truly understand it. 2–3 minutes is hard — you have to ruthlessly prioritise what matters.",
+    howto: [
+      "Pick one concept from your study that day",
+      "Write a 30-second script: problem → explanation → example",
+      "Record your terminal/screen with a voiceover using OBS or QuickTime",
+      "Keep it under 3 minutes — ruthlessly cut everything that isn't essential",
+      "Upload to YouTube, use the task name as the title",
+      "Build a playlist called 'AIK Learning' with all your videos"
+    ]
+  },
+  {
+    id: 29, order: 29, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "advanced", title: "Explore fopen, fprintf, fclose — write a program with file I/O",
+    tags: ["c", "file-io", "stdio"],
+    concept: "C file I/O uses <strong>FILE*</strong> pointers. `fopen` opens/creates a file and returns this pointer. `fprintf` writes formatted text (like printf but to a file). `fwrite` writes raw bytes. `fclose` flushes and closes. `fscanf` reads formatted input from a file. The return value of fprintf is the number of characters written.",
+    howto: [
+      "FILE* f = fopen('output.txt', 'w');",
+      "int ret = fprintf(f, 'Item: %s, Price: %.2f\\n', name, price);",
+      "printf('fprintf returned: %d\\n', ret);  // see what it returns",
+      "fclose(f);",
+      "Read back with fscanf or fgets",
+      "Store num1=0x44434241 in file using fwrite, open with xxd to verify"
+    ]
+  },
+  {
+    id: 30, order: 30, phase: "Phase 5 — Tools & Workflow", cat: "tools",
+    priority: "core", title: "Create a GitHub repo with a collection of prompts for different use cases",
+    tags: ["github", "ai", "prompts"],
+    concept: "A <strong>prompt library</strong> is a collection of reusable, well-crafted prompts for an AI model. Organising them by use case (debugging, code review, explanation, etc.) in a GitHub repo makes them searchable, version-controlled, and shareable with others. This is a real, practical project.",
+    howto: [
+      "Create a new GitHub repo: 'ai-prompt-library'",
+      "Create folders: /coding, /debugging, /learning, /writing",
+      "Each folder has a README.md listing prompts with their purpose",
+      "Add a root README.md with a table of contents",
+      "Use .md files only — GitHub renders them as rich text",
+      "Create a GitHub Pages site from these .md files (index.html auto-generated)"
+    ]
+  },
+  // ── PHASE 6: AI & ML ────────────────────────────────────────────────────────
+  {
+    id: 31, order: 31, phase: "Phase 6 — AI & ML", cat: "ai",
+    priority: "core", title: "Know about LLM, SLM, TLM, Agents, MCP Server, RAG, Web Services",
+    tags: ["ai", "llm", "rag", "agents", "mcp"],
+    concept: "<strong>LLM</strong> = Large Language Model (GPT-4, Claude, Llama). <strong>SLM</strong> = Small Language Model (Phi-2, TinyLlama). <strong>RAG</strong> = Retrieval Augmented Generation — giving the LLM access to your own documents at query time. <strong>Agents</strong> = LLMs that can take actions, use tools, and loop. <strong>MCP</strong> = Model Context Protocol — a standard for connecting AI models to tools.",
+    howto: [
+      "Read Anthropic's overview of Claude model families",
+      "Understand RAG: embed your docs → store vectors → at query time, retrieve relevant chunks → send to LLM",
+      "Understand Agents: LLM + tools + loop (observe → think → act → observe...)",
+      "Read about MCP Server: how Claude connects to external tools",
+      "List: what companies are using which LLMs for what products?",
+      "Explore open models on HuggingFace: download one with `ollama pull llama3`"
+    ]
+  },
+  {
+    id: 32, order: 32, phase: "Phase 6 — AI & ML", cat: "ai",
+    priority: "advanced", title: "Who invented deep learning? What is 'Attention is All You Need'?",
+    tags: ["ai", "deep-learning", "transformers", "history"],
+    concept: "<strong>Geoffrey Hinton</strong> (with Rumelhart & Williams) pioneered backpropagation in the 1980s, enabling deep neural networks. <strong>'Attention is All You Need'</strong> (Vaswani et al., 2017, Google Brain) introduced the <strong>Transformer</strong> architecture — replacing RNNs with attention mechanisms, enabling massive parallelism and the LLM revolution.",
+    howto: [
+      "Read the Wikipedia article on Geoffrey Hinton and Yoshua Bengio",
+      "Find and read the abstract + intro of 'Attention is All You Need' on arXiv",
+      "Understand the core idea: instead of processing sequences step-by-step (RNN), attend to ALL positions simultaneously",
+      "Draw the Transformer encoder block: multi-head attention → add & norm → FFN → add & norm",
+      "Research: CAPTCHAs are used to collect annotated training data — how?",
+      "Study image segmentation and how vision APIs work"
+    ]
+  },
+  {
+    id: 33, order: 33, phase: "Phase 6 — AI & ML", cat: "ai",
+    priority: "advanced", title: "Research installed models: versions, release dates, specialties, companies using them",
+    tags: ["ai", "models", "research", "ollama"],
+    concept: "Different AI models have different strengths. Some are optimised for code (DeepSeek Coder), some for reasoning (o1, Claude), some for speed (Haiku, Phi-2). Understanding model versions, release dates, and who built them helps you choose the right tool for the job.",
+    howto: [
+      "Run `ollama list` to see installed models",
+      "For each model: find its release date, who made it, parameter count (B = billion)",
+      "Research: what task is each model best at?",
+      "Find: which companies/products use each model in production?",
+      "Note: base model vs instruction-tuned vs RLHF-tuned variants",
+      "Find the largest and smallest models in GB on disk"
+    ]
+  },
+  {
+    id: 34, order: 34, phase: "Phase 6 — AI & ML", cat: "ai",
+    priority: "advanced", title: "Build CLI client for real estate backend",
+    tags: ["ai", "python", "cli", "api"],
+    concept: "A <strong>CLI client</strong> takes user input from the terminal, sends API requests to a backend, and displays results in the terminal. For a real estate app, this means: list properties, search by location/price, add a new property, etc. A good CLI client has help text, handles errors gracefully, and works from any directory.",
+    howto: [
+      "Use Python's `argparse` module for command parsing: `python realestate.py list --city Mumbai`",
+      "Make HTTP requests to your backend using `requests` library",
+      "Structure commands: `list`, `search`, `add`, `delete`",
+      "Add `--help` documentation to every command",
+      "Handle errors: if server is down, print friendly error not a stack trace",
+      "Package as a script in ~/bin so it's available everywhere in PATH"
+    ]
+  },
+  // ── PHASE 7: DATABASES ──────────────────────────────────────────────────────
+  {
+    id: 35, order: 35, phase: "Phase 7 — Databases", cat: "db",
+    priority: "core", title: "Explore basic SQLite using SQL commands — create table, insert, query",
+    tags: ["sqlite", "sql", "database"],
+    concept: "<strong>SQLite</strong> is a file-based database — no server needed. The entire database is one .db file. It supports full SQL: CREATE TABLE, INSERT, SELECT, WHERE, JOIN. It's used in every Android app, iOS app, and many desktop apps because it's embedded directly in the application.",
+    howto: [
+      "Install: `sudo apt install sqlite3`",
+      "Open: `sqlite3 mydb.db`",
+      "CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, height REAL);",
+      "INSERT INTO people VALUES (1, 'Alice', 165.5);",
+      "SELECT * FROM people;",
+      "Use `xxd mydb.db | head` before and after INSERT to see the file change",
+      "Experiment with primary key constraint — try inserting duplicate id"
+    ]
+  },
+  {
+    id: 36, order: 36, phase: "Phase 7 — Databases", cat: "db",
+    priority: "advanced", title: "Measure time difference for 10 queries with and without indexing",
+    tags: ["database", "indexing", "performance", "sql"],
+    concept: "A database <strong>index</strong> is like a book's index — instead of scanning every page, you jump directly to the right one. Without an index, a SELECT WHERE query scans every row (O(n)). With an index, it's O(log n) for a B-tree index. For 1 million rows, that's the difference between 1,000,000 comparisons and 20.",
+    howto: [
+      "Create a table with 100,000+ rows (generate with a Python script)",
+      "Run 10 SELECT queries on a non-indexed column, record time with `.timer on` in sqlite3",
+      "CREATE INDEX idx_name ON people(name);",
+      "Run the same 10 queries again — compare times",
+      "Use EXPLAIN QUERY PLAN to see if index is being used",
+      "Find: is there any metadata stored in a DB (schema, table names, column types)?"
+    ]
+  },
+  {
+    id: 37, order: 37, phase: "Phase 7 — Databases", cat: "db",
+    priority: "advanced", title: "Get WhatsApp SQLite file on your computer and explore it",
+    tags: ["sqlite", "mobile", "database", "forensics"],
+    concept: "WhatsApp stores all your messages, contacts, and media metadata in a SQLite database on your phone. On Android it's at `/data/data/com.whatsapp/databases/msgstore.db`. Exploring it reveals how a real production app structures its data — message threads, timestamps, sender IDs.",
+    howto: [
+      "On Android with root or backup: extract msgstore.db",
+      "Open with `sqlite3 msgstore.db`",
+      "`.tables` to list all tables",
+      "`.schema messages` to see the table structure",
+      "SELECT * FROM messages LIMIT 10;",
+      "Find: how are media files referenced? Are they stored in DB or as file paths?"
+    ]
+  },
+  // ── PHASE 8: ADVANCED PROJECTS ──────────────────────────────────────────────
+  {
+    id: 38, order: 38, phase: "Phase 8 — Advanced Projects", cat: "tools",
+    priority: "project", title: "Explore open source code for 1 hour daily — find a C project for multiple platforms",
+    tags: ["opensource", "c", "github", "cmake"],
+    concept: "Reading real-world code teaches patterns you won't find in tutorials. Good multi-platform C projects use <strong>CMake</strong> (a build system) and <strong>conditional compilation</strong> (`#ifdef _WIN32 ... #endif`) to handle platform differences. Examples: SQLite, libcurl, SDL2, zlib.",
+    howto: [
+      "Search GitHub: C language, 1000+ stars, topics: cross-platform",
+      "Look for projects with CMakeLists.txt — that's the cross-platform build file",
+      "Find `#ifdef _WIN32`, `#ifdef __APPLE__`, `#ifdef __linux__` in the code",
+      "Read just ONE source file end-to-end — understand every line",
+      "Note what external libraries it uses and why",
+      "Contribute: find a typo in a comment or README — make a PR"
+    ]
+  },
+  {
+    id: 39, order: 39, phase: "Phase 8 — Advanced Projects", cat: "tools",
+    priority: "project", title: "Create a website using GitHub Pages with .md files, index.html, and sub-pages",
+    tags: ["github", "web", "markdown", "html"],
+    concept: "<strong>GitHub Pages</strong> turns a GitHub repository into a static website. It can serve raw HTML/CSS/JS or automatically convert Markdown files using Jekyll. Your `index.html` or `index.md` becomes the homepage. Any push to the main branch automatically deploys the site.",
+    howto: [
+      "Create a repo: github.com/yourname/yourname.github.io",
+      "Create index.html with basic HTML structure",
+      "Create about.md and projects.md as sub-pages",
+      "Enable GitHub Pages in repo Settings → Pages → select branch: main",
+      "Wait 2-3 minutes, visit yourname.github.io",
+      "Compare the downloaded artifact (rendered HTML) with your source .md file"
+    ]
+  },
+  {
+    id: 40, order: 40, phase: "Phase 8 — Advanced Projects", cat: "systems",
+    priority: "project", title: "AWS storage types: read/write speeds, cost comparison",
+    tags: ["aws", "cloud", "storage", "systems"],
+    concept: "AWS offers multiple storage tiers: <strong>S3</strong> (object storage, cheap, slow), <strong>EBS</strong> (block storage, like a hard drive for EC2), <strong>EFS</strong> (shared filesystem), <strong>Instance Store</strong> (fastest, but lost on stop). Choosing the wrong storage type is a common and expensive mistake in cloud architecture.",
+    howto: [
+      "Research: S3 vs EBS vs EFS vs Instance Store — read AWS docs",
+      "Note read/write speeds for each (IOPS and throughput)",
+      "Note cost per GB per month for each",
+      "Find real-world use cases: when would you use each?",
+      "Understand: gp2 vs gp3 vs io1 EBS volume types",
+      "Compare with Azure Blob and Google Cloud Storage"
+    ]
+  }
+];
+
+let currentCat = 'all';
+let currentStatus = 'all';
+let currentPriority = null;
+let doneSet = new Set(JSON.parse(localStorage.getItem('done') || '[]'));
+let expanded = new Set();
+
+function saveDone() {
+  localStorage.setItem('done', JSON.stringify([...doneSet]));
+}
+
+function updateProgress() {
+  const total = TASKS.length;
+  const done = doneSet.size;
+  document.getElementById('progress-pill').textContent = done + ' / ' + total + ' done';
+}
+
+function filterCat(cat) {
+  currentCat = cat;
+  currentPriority = null;
+  document.querySelectorAll('.cat-btn[data-cat]').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderTasks();
+}
+
+function filterPriority(p) {
+  currentPriority = p;
+  currentCat = 'all';
+  document.querySelectorAll('.cat-btn[data-cat]').forEach(b => b.classList.remove('active'));
+  renderTasks();
+}
+
+function filterStatus(s) {
+  currentStatus = s;
+  ['all','todo','done'].forEach(id => document.getElementById('btn-'+id).classList.toggle('active', id === s));
+  renderTasks();
+}
+
+function toggleExpand(id) {
+  if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
+  renderTasks();
+}
+
+function toggleDone(id, e) {
+  e.stopPropagation();
+  if (doneSet.has(id)) doneSet.delete(id); else doneSet.add(id);
+  saveDone();
+  updateProgress();
+  renderTasks();
+}
+
+const CAT_COLORS = { systems:'#3dd68c', c:'#6c63ff', python:'#f5a623', networking:'#1dcfb0', tools:'#e86da4', ai:'#e24b4a', db:'#8b83ff' };
+
+function renderTasks() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  let filtered = TASKS.filter(t => {
+    if (currentCat !== 'all' && t.cat !== currentCat) return false;
+    if (currentPriority && t.priority !== currentPriority) return false;
+    if (currentStatus === 'done' && !doneSet.has(t.id)) return false;
+    if (currentStatus === 'todo' && doneSet.has(t.id)) return false;
+    if (search && !t.title.toLowerCase().includes(search) && !t.tags.join(' ').includes(search)) return false;
+    return true;
+  });
+
+  // Count per category
+  TASKS.forEach(t => {});
+  const cats = ['systems','c','python','networking','tools','ai','db'];
+  document.getElementById('cnt-all').textContent = TASKS.length;
+  cats.forEach(c => {
+    const el = document.getElementById('cnt-'+c);
+    if (el) el.textContent = TASKS.filter(t => t.cat === c).length;
+  });
+
+  // Group by phase
+  const phases = {};
+  filtered.forEach(t => {
+    if (!phases[t.phase]) phases[t.phase] = [];
+    phases[t.phase].push(t);
+  });
+
+  const container = document.getElementById('task-container');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty">No tasks match your filters.</div>';
+    return;
+  }
+
+  let html = '';
+  Object.entries(phases).forEach(([phase, tasks]) => {
+    const icons = {'Phase 1':'🔧','Phase 2':'⚙️','Phase 3':'🐍','Phase 4':'🌐','Phase 5':'🛠️','Phase 6':'🤖','Phase 7':'🗄️','Phase 8':'🚀'};
+    const phaseKey = phase.split(' — ')[0];
+    const icon = icons[phaseKey] || '📌';
+    const phaseTitle = phase.replace('Phase ', 'Phase ').split(' — ');
+    html += `<div class="phase-banner"><span class="phase-icon">${icon}</span><div><div class="phase-title">${phase}</div><div class="phase-sub">${tasks.length} task${tasks.length !== 1 ? 's' : ''} • Do these in order</div></div></div>`;
+    html += '<div class="task-grid">';
+    tasks.forEach(t => {
+      const done = doneSet.has(t.id);
+      const exp = expanded.has(t.id);
+      const prioClass = {foundation:'p-foundation',core:'p-core',advanced:'p-advanced',project:'p-project'}[t.priority];
+      const prioLabel = {foundation:'FOUNDATION',core:'CORE',advanced:'ADVANCED',project:'PROJECT'}[t.priority];
+      const catColor = CAT_COLORS[t.cat] || '#7a7870';
+      html += `<div class="task-card ${exp?'expanded':''}" onclick="toggleExpand(${t.id})">
+        <div class="task-header">
+          <span class="task-num" style="color:${catColor}">#${String(t.order).padStart(2,'0')}</span>
+          <span class="task-priority ${prioClass}">${prioLabel}</span>
+          <span class="task-title" style="${done?'text-decoration:line-through;opacity:0.5':''}">${t.title}</span>
+          <span class="task-chevron">▶</span>
+        </div>
+        <div class="task-tags">${t.tags.map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>
+        <div class="task-detail">
+          <div class="detail-inner">
+            <div class="detail-section">
+              <div class="detail-label">💡 Core Concept</div>
+              <div class="concept-box">${t.concept}</div>
+            </div>
+            <div class="detail-section">
+              <div class="detail-label">📋 How to Do It</div>
+              <ul class="steps-list">${t.howto.map((s,i)=>`<li><span class="step-dot">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+              <div class="status-row" onclick="event.stopPropagation()">
+                <div class="status-check ${done?'done':''}" onclick="toggleDone(${t.id}, event)"></div>
+                <span class="status-label">${done ? 'Completed ✓' : 'Mark as done'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div><br/>';
+  });
+  container.innerHTML = html;
+  updateProgress();
+}
+
+renderTasks();
+</script>
+</body>
+</html>

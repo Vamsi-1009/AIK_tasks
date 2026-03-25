@@ -2,8 +2,10 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Pool } = require("pg");
 
 let PORT = parseInt(process.env.PORT || "3000", 10);
+let DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@127.0.0.1:5432/aik_tasks";
 let ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-me";
 let SESSION_SECRET =
@@ -70,9 +72,22 @@ function loadEnvFile() {
 
 loadEnvFile();
 PORT = parseInt(process.env.PORT || String(PORT), 10);
+DATABASE_URL = process.env.DATABASE_URL || DATABASE_URL;
 ADMIN_USERNAME = process.env.ADMIN_USERNAME || ADMIN_USERNAME;
 ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || ADMIN_PASSWORD;
 SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || SESSION_SECRET;
+
+const pool = new Pool({
+  connectionString: DATABASE_URL
+});
+let dbReady = false;
+let dbInitError = "";
+
+pool.on("error", (error) => {
+  dbReady = false;
+  dbInitError = error.message;
+  console.error("PostgreSQL pool error:", error.message);
+});
 
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, {
@@ -84,26 +99,6 @@ function json(res, statusCode, payload) {
 function text(res, statusCode, payload, contentType = "text/plain; charset=utf-8") {
   res.writeHead(statusCode, { "Content-Type": contentType });
   res.end(payload);
-}
-
-function readStoredTasks() {
-  if (!fs.existsSync(tasksPath)) {
-    return { tasks: [] };
-  }
-
-  try {
-    const data = JSON.parse(fs.readFileSync(tasksPath, "utf8"));
-    return {
-      tasks: Array.isArray(data.tasks) ? data.tasks : []
-    };
-  } catch (error) {
-    return { tasks: [] };
-  }
-}
-
-function writeStoredTasks(tasks) {
-  fs.mkdirSync(path.dirname(tasksPath), { recursive: true });
-  fs.writeFileSync(tasksPath, JSON.stringify({ tasks }, null, 2) + "\n", "utf8");
 }
 
 function readBody(req) {
@@ -195,22 +190,7 @@ function getBearerToken(req) {
   return match ? match[1] : "";
 }
 
-function nextTaskId(tasks) {
-  const maxId = tasks.reduce((max, task) => {
-    return Number.isInteger(task.id) && task.id > max ? task.id : max;
-  }, 10000);
-  return maxId + 1;
-}
-
-function nextTaskOrder(tasks, phaseIdx) {
-  const inPhase = tasks.filter((task) => Number(task.phaseIdx) === Number(phaseIdx));
-  const maxOrder = inPhase.reduce((max, task) => {
-    return Number.isInteger(task.order) && task.order > max ? task.order : max;
-  }, 0);
-  return maxOrder + 1;
-}
-
-function normalizeTask(input, existingTasks) {
+function normalizeTask(input) {
   const title = String(input.title || "").trim();
   const concept = String(input.concept || "").trim();
   const phaseIdx = Number.parseInt(String(input.phaseIdx || ""), 10);
@@ -246,33 +226,200 @@ function normalizeTask(input, existingTasks) {
   }
 
   const preferredOrder = Number.parseInt(String(input.order || ""), 10);
-  const order = Number.isInteger(preferredOrder) && preferredOrder > 0
-    ? preferredOrder
-    : nextTaskOrder(existingTasks, phaseIdx);
 
   return {
-    id: nextTaskId(existingTasks),
-    order,
-    phase,
+    title,
+    concept,
     phaseIdx,
     cat,
     prio,
-    title,
+    phase,
     tags,
-    concept,
     howto,
-    createdAt: new Date().toISOString()
+    preferredOrder: Number.isInteger(preferredOrder) && preferredOrder > 0 ? preferredOrder : null
+  };
+}
+
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      order_index INTEGER NOT NULL,
+      phase TEXT NOT NULL,
+      phase_idx INTEGER NOT NULL,
+      cat TEXT NOT NULL,
+      prio TEXT NOT NULL,
+      title TEXT NOT NULL,
+      tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+      concept TEXT NOT NULL,
+      howto JSONB NOT NULL DEFAULT '[]'::jsonb,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS tasks_phase_order_idx
+    ON tasks (phase_idx, order_index, id)
+  `);
+}
+
+function readLegacyTasks() {
+  if (!fs.existsSync(tasksPath)) {
+    return [];
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(tasksPath, "utf8"));
+    return Array.isArray(data.tasks) ? data.tasks : [];
+  } catch (error) {
+    console.error("Failed to read legacy tasks.json:", error.message);
+    return [];
+  }
+}
+
+function mapTaskRow(row) {
+  return {
+    id: row.id,
+    order: row.order_index,
+    phase: row.phase,
+    phaseIdx: row.phase_idx,
+    cat: row.cat,
+    prio: row.prio,
+    title: row.title,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    concept: row.concept,
+    howto: Array.isArray(row.howto) ? row.howto : [],
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at
+  };
+}
+
+async function getStoredTasks() {
+  const result = await pool.query(`
+    SELECT id, order_index, phase, phase_idx, cat, prio, title, tags, concept, howto, created_at
+    FROM tasks
+    ORDER BY phase_idx ASC, order_index ASC, id ASC
+  `);
+  return result.rows.map(mapTaskRow);
+}
+
+async function insertTask(task) {
+  const result = await pool.query(
+    `
+      INSERT INTO tasks (order_index, phase, phase_idx, cat, prio, title, tags, concept, howto)
+      VALUES (
+        COALESCE(
+          $1,
+          (SELECT COALESCE(MAX(order_index), 0) + 1 FROM tasks WHERE phase_idx = $2)
+        ),
+        $3,
+        $2,
+        $4,
+        $5,
+        $6,
+        $7::jsonb,
+        $8,
+        $9::jsonb
+      )
+      RETURNING id, order_index, phase, phase_idx, cat, prio, title, tags, concept, howto, created_at
+    `,
+    [
+      task.preferredOrder,
+      task.phaseIdx,
+      task.phase,
+      task.cat,
+      task.prio,
+      task.title,
+      JSON.stringify(task.tags),
+      task.concept,
+      JSON.stringify(task.howto)
+    ]
+  );
+
+  return mapTaskRow(result.rows[0]);
+}
+
+async function migrateLegacyTasksIfNeeded() {
+  const legacyTasks = readLegacyTasks();
+  if (legacyTasks.length === 0) {
+    return;
+  }
+
+  const countResult = await pool.query("SELECT COUNT(*)::int AS count FROM tasks");
+  if (countResult.rows[0].count > 0) {
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const legacyTask of legacyTasks) {
+      const phaseIdx = Number.isInteger(legacyTask.phaseIdx) && legacyTask.phaseIdx > 0 ? legacyTask.phaseIdx : 1;
+      await client.query(
+        `
+          INSERT INTO tasks (order_index, phase, phase_idx, cat, prio, title, tags, concept, howto, created_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9::jsonb, COALESCE($10::timestamptz, NOW()))
+        `,
+        [
+          Number.isInteger(legacyTask.order) && legacyTask.order > 0 ? legacyTask.order : 1,
+          String(legacyTask.phase || phaseNames[phaseIdx] || `Phase ${phaseIdx}`),
+          phaseIdx,
+          categoryKeys.has(String(legacyTask.cat || "").trim()) ? String(legacyTask.cat).trim() : "systems",
+          priorityKeys.has(String(legacyTask.prio || "").trim()) ? String(legacyTask.prio).trim() : "foundation",
+          String(legacyTask.title || "Untitled task").trim() || "Untitled task",
+          JSON.stringify(
+            Array.isArray(legacyTask.tags)
+              ? legacyTask.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 12)
+              : []
+          ),
+          String(legacyTask.concept || "").trim(),
+          JSON.stringify(
+            Array.isArray(legacyTask.howto)
+              ? legacyTask.howto.map((step) => String(step).trim()).filter(Boolean).slice(0, 12)
+              : []
+          ),
+          legacyTask.createdAt || null
+        ]
+      );
+    }
+    await client.query("COMMIT");
+    console.log(`Imported ${legacyTasks.length} legacy tasks from backend/data/tasks.json`);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function getDbStatus() {
+  if (dbReady) {
+    return { ok: true, db: "up" };
+  }
+
+  return {
+    ok: false,
+    db: "down",
+    error: dbInitError || "Database is not ready"
   };
 }
 
 async function handleApi(req, res, pathname) {
   if (req.method === "GET" && pathname === "/api/health") {
-    return json(res, 200, { ok: true });
+    const status = getDbStatus();
+    return json(res, status.ok ? 200 : 503, status);
   }
 
   if (req.method === "GET" && pathname === "/api/tasks") {
-    const data = readStoredTasks();
-    return json(res, 200, { tasks: data.tasks });
+    if (!dbReady) {
+      return json(res, 503, { error: "Database unavailable", detail: dbInitError || "Database is not ready" });
+    }
+
+    try {
+      const tasks = await getStoredTasks();
+      return json(res, 200, { tasks });
+    } catch (error) {
+      return json(res, 500, { error: "Failed to load tasks", detail: error.message });
+    }
   }
 
   if (req.method === "POST" && pathname === "/api/admin/login") {
@@ -295,6 +442,10 @@ async function handleApi(req, res, pathname) {
   }
 
   if (req.method === "POST" && pathname === "/api/admin/tasks") {
+    if (!dbReady) {
+      return json(res, 503, { error: "Database unavailable", detail: dbInitError || "Database is not ready" });
+    }
+
     const token = getBearerToken(req);
     const session = verifyToken(token);
     if (!session) {
@@ -308,17 +459,19 @@ async function handleApi(req, res, pathname) {
       return json(res, 400, { error: error.message });
     }
 
-    const data = readStoredTasks();
     let task;
     try {
-      task = normalizeTask(body, data.tasks);
+      task = normalizeTask(body);
     } catch (error) {
       return json(res, 400, { error: error.message });
     }
 
-    data.tasks.push(task);
-    writeStoredTasks(data.tasks);
-    return json(res, 201, { task });
+    try {
+      const createdTask = await insertTask(task);
+      return json(res, 201, { task: createdTask });
+    } catch (error) {
+      return json(res, 500, { error: "Failed to store task", detail: error.message });
+    }
   }
 
   return false;
@@ -351,7 +504,25 @@ const server = http.createServer(async (req, res) => {
   return text(res, 404, "Not found");
 });
 
-server.listen(PORT, () => {
-  console.log(`AIK Tasks backend running at http://localhost:${PORT}`);
-});
+async function start() {
+  server.listen(PORT, () => {
+    console.log(`AIK Tasks backend running at http://localhost:${PORT}`);
+  });
 
+  try {
+    await initDb();
+    await migrateLegacyTasksIfNeeded();
+    dbReady = true;
+    dbInitError = "";
+    console.log("PostgreSQL storage ready");
+  } catch (error) {
+    dbReady = false;
+    dbInitError = error.message;
+    console.error("PostgreSQL storage unavailable:", error.message);
+  }
+}
+
+start().catch((error) => {
+  console.error("Failed to start backend:", error.message);
+  process.exit(1);
+});

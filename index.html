@@ -70,6 +70,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .progress-text{font-size:12px;font-family:var(--mono);color:var(--accent2)}
 .streak-badge{background:var(--amber-bg);border:1px solid rgba(245,166,35,0.25);border-radius:20px;padding:4px 12px;font-size:11px;font-family:var(--mono);color:var(--amber);display:flex;align-items:center;gap:5px}
 .streak-icon{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 1.5s infinite}
+.admin-button{
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text);
+  border-radius:10px;
+  padding:8px 12px;
+  font-size:12px;
+  font-family:var(--mono);
+  cursor:pointer;
+  transition:all var(--transition);
+}
+.admin-button:hover{border-color:rgba(124,106,255,0.4);color:var(--accent2);box-shadow:0 0 0 3px var(--accent-glow)}
+.admin-status{font-size:11px;font-family:var(--mono);color:var(--muted);padding:5px 10px;border:1px solid var(--border);border-radius:999px;background:var(--bg3)}
+.admin-status.online{color:var(--green);border-color:rgba(45,212,160,0.28);background:var(--green-bg)}
+.admin-status.offline{color:var(--red);border-color:rgba(240,100,90,0.28);background:var(--red-bg)}
 
 /* ── LAYOUT ── */
 .app{display:flex;height:calc(100vh - 60px);overflow:hidden}
@@ -334,6 +349,91 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   100%{transform:translateY(-60px) rotate(360deg);opacity:0}
 }
 .confetti-dot{position:absolute;pointer-events:none;border-radius:50%;animation:confetti 0.7s ease forwards}
+
+.admin-overlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(3,4,10,0.72);
+  backdrop-filter:blur(10px);
+  display:none;
+  align-items:flex-end;
+  justify-content:flex-end;
+  padding:20px;
+}
+.admin-overlay.open{display:flex;animation:fadeIn 0.2s ease}
+.admin-panel{
+  width:min(520px,100%);
+  max-height:calc(100vh - 40px);
+  overflow:auto;
+  background:linear-gradient(180deg,var(--card2),var(--bg2));
+  border:1px solid var(--border2);
+  border-radius:20px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.45);
+}
+.admin-panel-header{
+  position:sticky;top:0;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:18px 20px;
+  background:rgba(21,24,41,0.96);
+  border-bottom:1px solid var(--border);
+}
+.admin-panel-title{font-size:16px;font-weight:600}
+.admin-close{
+  width:34px;height:34px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text);cursor:pointer
+}
+.admin-panel-body{padding:20px;display:flex;flex-direction:column;gap:18px}
+.admin-note{font-size:12px;color:var(--muted);line-height:1.7}
+.admin-message{
+  display:none;
+  padding:11px 13px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  font-size:12px;
+}
+.admin-message.show{display:block}
+.admin-message.error{color:var(--red);border-color:rgba(240,100,90,0.25);background:var(--red-bg)}
+.admin-message.success{color:var(--green);border-color:rgba(45,212,160,0.25);background:var(--green-bg)}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-field{display:flex;flex-direction:column;gap:7px}
+.admin-field.full{grid-column:1 / -1}
+.admin-label{font-size:11px;color:var(--muted2);font-family:var(--mono)}
+.admin-input,.admin-select,.admin-textarea{
+  width:100%;
+  border:1px solid var(--border2);
+  border-radius:12px;
+  background:var(--bg3);
+  color:var(--text);
+  font:inherit;
+  padding:11px 12px;
+  outline:none;
+}
+.admin-input:focus,.admin-select:focus,.admin-textarea:focus{border-color:rgba(124,106,255,0.5);box-shadow:0 0 0 3px var(--accent-glow)}
+.admin-textarea{min-height:110px;resize:vertical}
+.admin-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.admin-submit{
+  border:none;
+  border-radius:12px;
+  padding:11px 16px;
+  background:linear-gradient(90deg,var(--accent),var(--teal));
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+}
+.admin-logout{
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:10px 14px;
+  background:transparent;
+  color:var(--muted2);
+  cursor:pointer;
+}
+@media(max-width:700px){
+  .topbar{padding:0 14px;gap:8px}
+  .topbar-sub,.admin-status{display:none}
+  .admin-overlay{padding:10px}
+  .admin-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -356,6 +456,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <span class="progress-text" id="progress-text">0 / 0</span>
     </div>
     <div class="streak-badge"><div class="streak-icon"></div><span id="streak-text">0 done today</span></div>
+    <span class="admin-status offline" id="admin-status">Backend offline</span>
+    <button class="admin-button" type="button" onclick="openAdminPanel()">Admin</button>
   </div>
 </div>
 
@@ -399,8 +501,108 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
+<div class="admin-overlay" id="admin-overlay" onclick="closeAdminPanel(event)">
+  <div class="admin-panel" onclick="event.stopPropagation()">
+    <div class="admin-panel-header">
+      <div>
+        <div class="admin-panel-title">Admin Task Manager</div>
+        <div class="admin-note">Login to create roadmap tasks that are stored in the backend for future use.</div>
+      </div>
+      <button class="admin-close" type="button" onclick="closeAdminPanel()">x</button>
+    </div>
+    <div class="admin-panel-body">
+      <div class="admin-message" id="admin-message"></div>
+
+      <div id="admin-login-view">
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span class="admin-label">Username</span>
+            <input class="admin-input" id="admin-username" value="admin" autocomplete="username"/>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label">Password</span>
+            <input class="admin-input" id="admin-password" type="password" autocomplete="current-password" placeholder="Enter admin password"/>
+          </label>
+        </div>
+        <div class="admin-actions" style="margin-top:14px">
+          <div class="admin-note">Default credentials come from the backend environment.</div>
+          <button class="admin-submit" type="button" onclick="adminLogin()">Login</button>
+        </div>
+      </div>
+
+      <form id="admin-task-form" style="display:none" onsubmit="submitAdminTask(event)">
+        <div class="admin-grid">
+          <label class="admin-field full">
+            <span class="admin-label">Task title</span>
+            <input class="admin-input" id="task-title" required placeholder="Add a future roadmap task"/>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label">Phase</span>
+            <select class="admin-select" id="task-phaseIdx">
+              <option value="1">Phase 1</option>
+              <option value="2">Phase 2</option>
+              <option value="3">Phase 3</option>
+              <option value="4">Phase 4</option>
+              <option value="5">Phase 5</option>
+              <option value="6">Phase 6</option>
+              <option value="7">Phase 7</option>
+              <option value="8">Phase 8</option>
+              <option value="9">Phase 9</option>
+              <option value="10">Phase 10</option>
+              <option value="11">Phase 11</option>
+              <option value="12">Phase 12</option>
+              <option value="13">Phase 13</option>
+            </select>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label">Category</span>
+            <select class="admin-select" id="task-cat">
+              <option value="systems">Systems & OS</option>
+              <option value="c">C Programming</option>
+              <option value="python">Python</option>
+              <option value="networking">Networking & Web</option>
+              <option value="tools">Tools & Workflow</option>
+              <option value="ai">AI & ML</option>
+              <option value="db">Databases</option>
+            </select>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label">Priority</span>
+            <select class="admin-select" id="task-prio">
+              <option value="foundation">Foundation</option>
+              <option value="core">Core</option>
+              <option value="advanced">Advanced</option>
+              <option value="project">Project</option>
+            </select>
+          </label>
+          <label class="admin-field">
+            <span class="admin-label">Order in phase</span>
+            <input class="admin-input" id="task-order" type="number" min="1" placeholder="Auto"/>
+          </label>
+          <label class="admin-field full">
+            <span class="admin-label">Tags</span>
+            <input class="admin-input" id="task-tags" placeholder="comma, separated, tags"/>
+          </label>
+          <label class="admin-field full">
+            <span class="admin-label">Core concept</span>
+            <textarea class="admin-textarea" id="task-concept" required placeholder="Explain the idea behind this task. HTML is allowed for formatting."></textarea>
+          </label>
+          <label class="admin-field full">
+            <span class="admin-label">Step-by-step instructions</span>
+            <textarea class="admin-textarea" id="task-howto" required placeholder="One step per line"></textarea>
+          </label>
+        </div>
+        <div class="admin-actions">
+          <button class="admin-logout" type="button" onclick="adminLogout()">Logout</button>
+          <button class="admin-submit" type="submit">Create task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
-const TASKS=[
+let TASKS=[
   {id:1,order:1,phase:"Phase 1 — Foundation",phaseIdx:1,cat:"systems",prio:"foundation",
    title:"Understand file systems — naming, storage, OS disk location, space allocation",
    tags:["os","filesystem","inode","blocks"],
@@ -1179,6 +1381,12 @@ const TASKS=[
    ]}
 ];
 
+const BUILTIN_TASKS=TASKS.map(task=>({
+  ...task,
+  tags:[...task.tags],
+  howto:[...task.howto]
+}));
+
 const CATS={
   all:{label:"All Tasks",icon:"◈",color:"#6b6d85"},
   systems:{label:"Systems & OS",icon:"⬡",color:"#2dd4a0"},
@@ -1206,10 +1414,195 @@ const PHASES={
   13:{emoji:"🌍",desc:"SDKs, open models, REPLs, encryption vs encoding"}
 };
 
+const PHASE_DISPLAY_NAMES=Object.fromEntries(
+  Object.keys(PHASES).map(key=>{
+    const existing=BUILTIN_TASKS.find(task=>task.phaseIdx===Number(key));
+    return [key,existing?existing.phase:`Phase ${key}`];
+  })
+);
+
 let currentCat='all', currentStatus='all';
 let doneSet=new Set(JSON.parse(localStorage.getItem('aik_done')||'[]'));
 let expanded=new Set();
 let todayDone=parseInt(localStorage.getItem('aik_today_date')===new Date().toDateString()?localStorage.getItem('aik_today_done')||'0':'0');
+let backendAvailable=false;
+let adminToken=localStorage.getItem('aik_admin_token')||'';
+let adminUsername=localStorage.getItem('aik_admin_user')||'';
+
+function mergeTasks(extraTasks){
+  TASKS=[
+    ...BUILTIN_TASKS.map(task=>({
+      ...task,
+      tags:[...task.tags],
+      howto:[...task.howto]
+    })),
+    ...extraTasks
+  ];
+}
+
+function setAdminAvailability(isAvailable){
+  backendAvailable=isAvailable;
+  const status=document.getElementById('admin-status');
+  status.textContent=isAvailable?'Backend online':'Backend offline';
+  status.classList.toggle('online',isAvailable);
+  status.classList.toggle('offline',!isAvailable);
+}
+
+function setAdminMessage(message,type=''){
+  const el=document.getElementById('admin-message');
+  if(!message){
+    el.textContent='';
+    el.className='admin-message';
+    return;
+  }
+  el.textContent=message;
+  el.className=`admin-message show ${type}`.trim();
+}
+
+function updateAdminUI(){
+  document.getElementById('admin-login-view').style.display=adminToken?'none':'block';
+  document.getElementById('admin-task-form').style.display=adminToken?'block':'none';
+}
+
+function openAdminPanel(){
+  document.getElementById('admin-overlay').classList.add('open');
+  updateAdminUI();
+  if(!backendAvailable){
+    setAdminMessage('Start the backend server first to use admin login and persistent task creation.','error');
+  }else if(adminToken){
+    setAdminMessage(`Logged in as ${adminUsername||'admin'}.`,'success');
+  }else{
+    setAdminMessage('');
+  }
+}
+
+function closeAdminPanel(event){
+  if(event&&event.target&&event.target.id!=='admin-overlay') return;
+  document.getElementById('admin-overlay').classList.remove('open');
+}
+
+function adminLogout(){
+  adminToken='';
+  adminUsername='';
+  localStorage.removeItem('aik_admin_token');
+  localStorage.removeItem('aik_admin_user');
+  updateAdminUI();
+  setAdminMessage('Admin session cleared.','success');
+}
+
+function getPhaseNameByIndex(phaseIdx){
+  return PHASE_DISPLAY_NAMES[String(phaseIdx)]||`Phase ${phaseIdx}`;
+}
+
+function parseListInput(value){
+  return value
+    .split(/\r?\n|,/)
+    .map(item=>item.trim())
+    .filter(Boolean);
+}
+
+async function loadBackendTasks(){
+  try{
+    const res=await fetch('/api/tasks');
+    if(!res.ok) throw new Error('Backend request failed');
+    const data=await res.json();
+    const extraTasks=Array.isArray(data.tasks)?data.tasks:[];
+    mergeTasks(extraTasks);
+    setAdminAvailability(true);
+  }catch(error){
+    mergeTasks([]);
+    setAdminAvailability(false);
+  }
+}
+
+async function adminLogin(){
+  if(!backendAvailable){
+    setAdminMessage('Backend is offline. Start the Node server and reload this page.','error');
+    return;
+  }
+
+  const username=document.getElementById('admin-username').value.trim();
+  const password=document.getElementById('admin-password').value;
+
+  try{
+    const res=await fetch('/api/admin/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Login failed');
+    adminToken=data.token;
+    adminUsername=data.username||username;
+    localStorage.setItem('aik_admin_token',adminToken);
+    localStorage.setItem('aik_admin_user',adminUsername);
+    updateAdminUI();
+    setAdminMessage(`Logged in as ${adminUsername}.`,'success');
+    document.getElementById('admin-password').value='';
+  }catch(error){
+    setAdminMessage(error.message,'error');
+  }
+}
+
+async function submitAdminTask(event){
+  event.preventDefault();
+
+  if(!adminToken){
+    setAdminMessage('Login is required before creating tasks.','error');
+    return;
+  }
+
+  const phaseIdx=Number(document.getElementById('task-phaseIdx').value);
+  const payload={
+    title:document.getElementById('task-title').value.trim(),
+    phaseIdx,
+    phase:getPhaseNameByIndex(phaseIdx),
+    cat:document.getElementById('task-cat').value,
+    prio:document.getElementById('task-prio').value,
+    order:document.getElementById('task-order').value.trim(),
+    tags:parseListInput(document.getElementById('task-tags').value),
+    concept:document.getElementById('task-concept').value.trim(),
+    howto:parseListInput(document.getElementById('task-howto').value)
+  };
+
+  try{
+    const res=await fetch('/api/admin/tasks',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:`Bearer ${adminToken}`
+      },
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Task creation failed');
+    await loadBackendTasks();
+    saveDone();
+    updateStats();
+    buildNav();
+    buildStatCards();
+    render();
+    document.getElementById('admin-task-form').reset();
+    document.getElementById('task-phaseIdx').value='1';
+    document.getElementById('task-cat').value='systems';
+    document.getElementById('task-prio').value='foundation';
+    setAdminMessage(`Task created: ${data.task.title}`,'success');
+  }catch(error){
+    if(/Unauthorized/i.test(error.message)){
+      adminLogout();
+    }
+    setAdminMessage(error.message,'error');
+  }
+}
+
+async function initApp(){
+  updateAdminUI();
+  await loadBackendTasks();
+  buildNav();
+  buildStatCards();
+  updateStats();
+  render();
+}
 
 function saveDone(){
   localStorage.setItem('aik_done',JSON.stringify([...doneSet]));
@@ -1448,10 +1841,7 @@ function render(){
   container.innerHTML=html;
 }
 
-buildNav();
-buildStatCards();
-updateStats();
-render();
+initApp();
 </script>
 </body>
 </html>

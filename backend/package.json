@@ -1,0 +1,10 @@
+{
+  "name": "aik-tasks-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal backend for AIK Tasks admin login and persistent task creation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
